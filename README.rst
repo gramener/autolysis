@@ -15,6 +15,6 @@ Autolysis
 
 An automated data analysis package.
 
-- [LICENSE](LICENSE): [CC-BY-NC-SA 4.0](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+- LICENSE: `CC-BY-NC-SA <http://creativecommons.org/licenses/by-nc-sa/4.0/>`__.
   No commercial use. Credit Gramener. Share modifications with the same license.
-- [Documentation](https://autolysis.readthedocs.org/)
+- `Documentation <https://autolysis.readthedocs.org/>`__

@@ -16,6 +16,12 @@ from scipy.stats.mstats import ttest_ind
 from scipy.stats import chi2_contingency
 from scipy.linalg import toeplitz
 
+__folder__ = os.path.split(os.path.abspath(__file__))[0]
+
+with open(os.path.join(__folder__, 'release.json')) as _release_file:
+    release = json.load(_release_file)
+    __version__ = release['version']
+
 def is_date(series):
     '''
     Returns ``True`` if the first 1000 non-null values in a ``series`` are
@@ -124,7 +130,7 @@ def types(data):
     typ['numbers'] = get_numeric_cols(data.dshape)
     typ['groups'] = list(set(data.fields) - set(typ['numbers']))
     typ['dates'] = [group for group in typ['groups']
-                    if str(data[group].dshape[-1]) == '?datetime'  
+                    if str(data[group].dshape[-1]) == '?datetime'
                     or is_date(bz.into(pd.Series, data[group].head(1000)))]
     typ['keywords'] = [group for group in typ['groups']
                        if str(data[group].dshape[-1]) == '?string'
@@ -162,7 +168,7 @@ def groupmeans(data, groups, numbers,
         weights_sum = data[weight].sum()
         means = {}
         for number in numeric_cols:
-            means[number] = (data[number] * data[weight] 
+            means[number] = (data[number] * data[weight]
                              * 1.0).sum() / data[weight].sum()
         return means
 
@@ -174,7 +180,7 @@ def groupmeans(data, groups, numbers,
     else:
         means = weighted_avg(data, numbers, weight)
     results = []
-  
+
     for group in groups:
         if weight is None:
             agg = {number: bz.mean(data[number]) for number in numbers}
