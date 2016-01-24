@@ -1,0 +1,21 @@
+# Additional libraries required to build Autolysis
+
+# Development
+bumpversion
+wheel
+watchdog
+flake8
+tox
+coverage
+Sphinx
+cryptography
+PyYAML
+
+# Documentation
+sphinx_rtd_theme
+
+# Testing
+markdown
+tox
+PyMySQL
+psycopg2
