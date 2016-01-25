@@ -54,13 +54,15 @@ coverage:
 	$(PYTHON) -m coverage html
 	$(BROWSER) htmlcov/index.html
 
-PDFLATEX := $(shell pdflatex -version 2>/dev/null)
 docs:
 	rm -f docs/autolysis.rst
 	rm -f docs/modules.rst
 	sphinx-apidoc -o docs/ autolysis
 	$(MAKE) -C docs clean
 	$(MAKE) -C docs html
+
+PDFLATEX := $(shell pdflatex -version 2>/dev/null)
+pdf: docs
 ifdef PDFLATEX
 	$(MAKE) -C docs latexpdf
 else
