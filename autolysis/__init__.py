@@ -1,26 +1,23 @@
 '''
 Autolyse - Automated analysis library.
 '''
-import six
 import os
-import re
 import json
 import datetime
 import dateutil
-import itertools
 import numpy as np
 import blaze as bz
 import pandas as pd
 
 from scipy.stats.mstats import ttest_ind
-from scipy.stats import chi2_contingency
-from scipy.linalg import toeplitz
 
 __folder__ = os.path.split(os.path.abspath(__file__))[0]
 
+# Load autolysis.__version__ from release.json
 with open(os.path.join(__folder__, 'release.json')) as _release_file:
     release = json.load(_release_file)
     __version__ = release['version']
+
 
 def is_date(series):
     '''
@@ -58,6 +55,7 @@ def is_date(series):
         return False
     return True
 
+
 def has_keywords(series, sep=' ', thresh=2):
     '''
     Returns ``True`` if any of the first 1000 non-null values in a string
@@ -86,6 +84,7 @@ def has_keywords(series, sep=' ', thresh=2):
     '''
     return (series.dropna()[:1000].str.count(sep) > thresh).any()
 
+
 def get_numeric_cols(dshape):
     shape = dshape.parameters[-1].dict
     cols = []
@@ -94,6 +93,7 @@ def get_numeric_cols(dshape):
         if type.startswith("int") or type.startswith("float"):
             cols.append(k)
     return cols
+
 
 def types(data):
     '''
@@ -130,12 +130,13 @@ def types(data):
     typ['numbers'] = get_numeric_cols(data.dshape)
     typ['groups'] = list(set(data.fields) - set(typ['numbers']))
     typ['dates'] = [group for group in typ['groups']
-                    if str(data[group].dshape[-1]) == '?datetime'
-                    or is_date(bz.into(pd.Series, data[group].head(1000)))]
+                    if str(data[group].dshape[-1]) == '?datetime' or
+                    is_date(bz.into(pd.Series, data[group].head(1000)))]
     typ['keywords'] = [group for group in typ['groups']
-                       if str(data[group].dshape[-1]) == '?string'
-                       and has_keywords(bz.into(pd.Series, data[group].head(1000)))]
+                       if str(data[group].dshape[-1]) == '?string' and
+                       has_keywords(bz.into(pd.Series, data[group].head(1000)))]
     return typ
+
 
 def groupmeans(data, groups, numbers,
                cutoff=.01,
@@ -161,15 +162,14 @@ def groupmeans(data, groups, numbers,
         1% of the dataset, or 10, whichever is larger.
     '''
     def weighted_avg(data, numeric_cols, weight):
-        #TODO: Yet to convert in to Blaze operations
+        # TODO: Yet to convert in to Blaze operations
         '''
         Computes weighted average for specificied columns
         '''
-        weights_sum = data[weight].sum()
+        weights_sum = float(data[weight].sum())
         means = {}
         for number in numeric_cols:
-            means[number] = (data[number] * data[weight]
-                             * 1.0).sum() / data[weight].sum()
+            means[number] = data[number] * data[weight].sum() / weights_sum
         return means
 
     if minsize is None:
@@ -187,8 +187,8 @@ def groupmeans(data, groups, numbers,
             agg['#'] = bz.count(data)
             ave = bz.by(data[group], **agg).sort('#', ascending=False)
         else:
-            #TODO: Yet to converted in to Blaze operations
-            #ave = grouped.apply(lambda v: weighted_avg(v, numbers, weight))
+            # TODO: Yet to converted in to Blaze operations
+            # ave = grouped.apply(lambda v: weighted_avg(v, numbers, weight))
             agg = {number: bz.mean(data[number]) for number in numbers}
             agg['#'] = bz.count(data)
             ave = bz.by(data[group], **agg).sort('#', ascending=False)
