@@ -2,6 +2,9 @@
 docs/autolysis*.rst
 docs/modules.rst
 
+# Ignore test data files
+tests/data/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
