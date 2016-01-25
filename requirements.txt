@@ -1,4 +1,4 @@
-# Libraries required for Gramex
+# Libraries required for Autolysis
 
 # For setup
 setuptools >= 16.0          # 16.0 has good error message support

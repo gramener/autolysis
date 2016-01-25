@@ -22,7 +22,7 @@ Setup
   latest development version
 - Any other branches are temporary feature branches
 
-Gramex runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
+Autolysis runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
 To set up the development environment on Ubuntu, run this script::
 
     source <(wget -qO- https://github.com/gramener/autolysis/issues/raw/master/setup-dev.sh)
@@ -39,8 +39,8 @@ To manually set up the development environment, follow these steps.
         git clone git@github.com:gramener/autolysis.git
 
 4. Install development requirements, and also this branch in editable mode. This
-   "installs" the gramex folder in development mode. Changes to this folder are
-   reflected in the environment::
+   "installs" the autolysis folder in development mode. Changes to this folder
+   are reflected in the environment::
 
         pip install -r requirements.txt         # Base requirements
         pip install -r requirements-dev.txt     # Additional development requirements
