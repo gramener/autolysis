@@ -14,7 +14,7 @@ import logging
 import unittest
 import autolysis
 from blaze import Data
-from urllib import urlretrieve
+from six.moves.urllib.request import urlretrieve
 
 _DIR = os.path.split(os.path.abspath(__file__))[0]
 _DATA_DIR = os.path.join(_DIR, 'data')
