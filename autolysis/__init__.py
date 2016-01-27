@@ -134,7 +134,8 @@ def types(data):
                     is_date(bz.into(pd.Series, data[group].head(1000)))]
     typ['keywords'] = [group for group in typ['groups']
                        if str(data[group].dshape[-1]) == '?string' and
-                       has_keywords(bz.into(pd.Series, data[group].head(1000)))]
+                       has_keywords(bz.into(
+                                    pd.Series, data[group].head(1000)))]
     return typ
 
 
@@ -208,8 +209,10 @@ def groupmeans(data, groups, numbers,
             sorted_cats = ave[number][biggies].dropna().order()
             if len(sorted_cats) < 2:
                 continue
-            lo = bz.into(list, data[number][data[group] == sorted_cats.index[0]])
-            hi = bz.into(list, data[number][data[group] == sorted_cats.index[-1]])
+            lo = bz.into(list,
+                         data[number][data[group] == sorted_cats.index[0]])
+            hi = bz.into(list,
+                         data[number][data[group] == sorted_cats.index[-1]])
             _, prob = ttest_ind(
                 np.ma.masked_array(lo, np.isnan(lo)),
                 np.ma.masked_array(hi, np.isnan(hi))

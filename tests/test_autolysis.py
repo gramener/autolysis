@@ -8,7 +8,6 @@ test_autolysis
 Tests for `autolysis` module.
 """
 
-import io
 import os
 import yaml
 import logging
@@ -24,6 +23,7 @@ _DATA_DIR = os.path.join(_DIR, 'data')
 with open(os.path.join(_DIR, 'datasets.yaml')) as _dataset_file:
     datasets = yaml.load(_dataset_file)
 
+
 def setUpModule():
     'Download test data files into data/ target folder'
     if not os.path.exists(_DATA_DIR):
@@ -34,19 +34,23 @@ def setUpModule():
             logging.info('Downloading %s', dataset['path'])
             urlretrieve(dataset['url'], path)
 
+
 class TestTypes(unittest.TestCase):
     'Test autolysis.types'
     longMessage = True
 
     def check_type(self, result, expected, msg):
         'result = expected, but order does not matter. Both are dict of lists'
-        self.assertEqual(set(result.keys()), set(expected.keys()), '%s keys' % msg)
+        self.assertEqual(set(result.keys()),
+                         set(expected.keys()), '%s keys' % msg)
         for key in expected:
-            self.assertEqual(set(result[key]), set(expected[key]), '%s - %s' % (msg, key))
+            self.assertEqual(set(result[key]),
+                             set(expected[key]), '%s - %s' % (msg, key))
 
     def test_types(self):
         for dataset in datasets:
-            result = autolysis.types(Data(os.path.join(_DATA_DIR, dataset['path'])))
+            data = Data(os.path.join(_DATA_DIR, dataset['path']))
+            result = autolysis.types(data)
             self.check_type(result, dataset['types'], dataset['path'])
 
 if __name__ == '__main__':
