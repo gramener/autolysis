@@ -31,6 +31,9 @@ with open(os.path.join(_DIR, 'test_config.yaml')) as _dataset_file:
 def setUpModule():
     'Download test data files into data/ target folder'
 
+    # Set root logger logging level to INFO
+    logging.basicConfig(level=logging.INFO)
+
     # Download datasets
     if not os.path.exists(_DATA_DIR):
         os.makedirs(_DATA_DIR)

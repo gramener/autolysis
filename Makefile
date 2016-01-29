@@ -43,13 +43,13 @@ lint:
 	flake8 autolysis tests
 
 test:
-	$(PYTHON) setup.py test
+	$(PYTHON) setup.py nosetests
 
 test-all:
 	tox
 
 coverage:
-	$(PYTHON) -m coverage run --source autolysis setup.py test
+	$(PYTHON) -m coverage run --source autolysis setup.py nosetests
 	$(PYTHON) -m coverage report -m
 	$(PYTHON) -m coverage html
 	$(BROWSER) htmlcov/index.html
