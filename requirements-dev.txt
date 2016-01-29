@@ -16,6 +16,6 @@ sphinx_rtd_theme
 
 # Testing
 markdown
-tox
 PyMySQL
 psycopg2
+sqlalchemy-utils

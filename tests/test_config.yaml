@@ -1,0 +1,33 @@
+databases:
+    postgres: postgresql://postgres@localhost/autolysistest
+    mysql: mysql+pymysql://root@localhost/autolysistest
+    sqlite: sqlite:///autolysistest.sqlite3
+
+datasets:
+    -
+        url: "https://share.gramener.com/data/public/data?dl=true&file=/R/datasets.cars.csv"
+        table: cars
+        databases: [postgres, mysql, sqlite]
+        types:
+            dates: []
+            groups: []
+            keywords: []
+            numbers: ["Unnamed: 0", "speed", "dist"]
+    -
+        url: "https://share.gramener.com/data/public/data?dl=true&file=/R/vcd.Suicide.csv"
+        table: suicide
+        databases: [postgres, mysql, sqlite]
+        types:
+            dates: []
+            groups: ["age.group", "method", "method2", "sex"]
+            keywords: []
+            numbers: ["Unnamed: 0", "age", "Freq"]
+    -
+        url: "https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv"
+        table: pincodes
+        databases: [postgres]
+        types:
+            dates: []
+            groups: ['Taluk', 'statename', 'officename', 'divisionname', 'Telephone', 'Related Suboffice', 'circlename', 'Deliverystatus', 'officeType', 'Related Headoffice', 'Districtname', 'regionname']
+            keywords: ["officeType", "officename", "Related Suboffice"]
+            numbers: ["pincode"]
