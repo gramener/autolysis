@@ -9,7 +9,6 @@ Tests for `autolysis` module.
 """
 
 import os
-import sys
 import yaml
 import logging
 import unittest
@@ -42,7 +41,7 @@ def setUpModule():
             urlretrieve(dataset['url'], dataset['path'])
 
     # Create autolysis databases
-    # _databases('drop')
+    _databases('drop')
     dburl = _databases('create')
 
     # Load datasets into databases
@@ -62,9 +61,9 @@ def setUpModule():
             logging.info('Creating table %s on %s', dataset['table'], db)
             try:
                 odo(dataset['path'], target)
-            except sa.exc.InternalError as e:
+            except sa.exc.InternalError:
                 logging.warning('Loading %s into %s failed: %s',
-                             dataset['table'], db, traceback.format_exc(0))
+                                dataset['table'], db, traceback.format_exc(0))
 
 
 class TestTypes(unittest.TestCase):
