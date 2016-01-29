@@ -95,12 +95,17 @@ def _databases(operation):
     os.chdir(_DATA_DIR)
     result = {}
     for db, db_url in config['databases'].items():
+        # If we can't connect to the database, skip.
         try:
-            engine = sa.create_engine(db_url)
+            base_url = sa.engine.url.make_url(db_url)
+            base_url.database = None
+            engine = sa.create_engine(base_url)
             engine.connect()
         except sa.exc.OperationalError:
             logging.warning('Unable to connect to %s to %s', db_url, operation)
             continue
+
+        # If we can connect to the database, try creating / dropping tables
         if 'create' in operation.lower():
             if not database_exists(db_url):
                 logging.warning('Creating database %s', db_url)
