@@ -142,8 +142,7 @@ def types(data):
 def groupmeans(data, groups, numbers,
                cutoff=.01,
                quantile=.95,
-               minsize=None,
-               weight=None):
+               minsize=None):
     '''
     Yields the significant differences in average between every pair of
     groups and numbers.
@@ -162,38 +161,17 @@ def groupmeans(data, groups, numbers,
         If minsize=None, automatically set the minimum size to
         1% of the dataset, or 10, whichever is larger.
     '''
-    def weighted_avg(data, numeric_cols, weight):
-        # TODO: Yet to convert in to Blaze operations
-        '''
-        Computes weighted average for specificied columns
-        '''
-        weights_sum = float(data[weight].sum())
-        means = {}
-        for number in numeric_cols:
-            means[number] = data[number] * data[weight].sum() / weights_sum
-        return means
 
     if minsize is None:
         minsize = max(data.nrows / 100, 10)
 
-    if weight is None:
-        means = {col: data[col].mean() for col in numbers}
-    else:
-        means = weighted_avg(data, numbers, weight)
+    means = {col: data[col].mean() for col in numbers}
     results = []
 
     for group in groups:
-        if weight is None:
-            agg = {number: bz.mean(data[number]) for number in numbers}
-            agg['#'] = bz.count(data)
-            ave = bz.by(data[group], **agg).sort('#', ascending=False)
-        else:
-            # TODO: Yet to converted in to Blaze operations
-            # ave = grouped.apply(lambda v: weighted_avg(v, numbers, weight))
-            agg = {number: bz.mean(data[number]) for number in numbers}
-            agg['#'] = bz.count(data)
-            ave = bz.by(data[group], **agg).sort('#', ascending=False)
-
+        agg = {number: bz.mean(data[number]) for number in numbers}
+        agg['#'] = bz.count(data)
+        ave = bz.by(data[group], **agg).sort('#', ascending=False)
         ave = bz.into(pd.DataFrame, ave)
         ave.index = ave[group]
         sizes = ave['#']
@@ -206,7 +184,7 @@ def groupmeans(data, groups, numbers,
         for number in numbers:
             if number == group:
                 continue
-            sorted_cats = ave[number][biggies].dropna().order()
+            sorted_cats = ave[number][biggies].dropna().sort_values()
             if len(sorted_cats) < 2:
                 continue
             lo = bz.into(list,
@@ -223,9 +201,9 @@ def groupmeans(data, groups, numbers,
                 'group': group,
                 'number': number,
                 'prob': prob,
-                'gain': (sorted_cats.iget(-1) / means[number] - 1)[0],
+                'gain': (sorted_cats.iloc[-1] / means[number] - 1)[0],
                 'biggies': ave.ix[biggies][number],
-                'means': ave[[number, '#']].sort(number),
+                'means': ave[[number, '#']].sort_values(by=number),
             })
 
     results = pd.DataFrame(results)
