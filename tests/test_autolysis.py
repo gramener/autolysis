@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 """
@@ -9,23 +8,17 @@ Tests for `autolysis` module.
 """
 
 import os
-import yaml
 import logging
-import unittest
 import autolysis
 import traceback
 import sqlalchemy as sa
 from odo import odo
 from blaze import Data
+from nose.tools import eq_
 from six.moves.urllib.request import urlretrieve
-from sqlalchemy_utils.functions import database_exists, create_database, drop_database
+from sqlalchemy_utils.functions import database_exists, create_database
 
-_DIR = os.path.split(os.path.abspath(__file__))[0]
-_DATA_DIR = os.path.join(_DIR, 'data')
-
-# test_config.yaml documents sources & test results on datasets to be tested
-with open(os.path.join(_DIR, 'test_config.yaml')) as _dataset_file:
-    config = yaml.load(_dataset_file)
+from . import _DATA_DIR, config, server_exists
 
 
 def setUpModule():
@@ -43,9 +36,16 @@ def setUpModule():
             logging.info('Downloading %s', dataset['table'])
             urlretrieve(dataset['url'], dataset['path'])
 
-    # Create autolysis databases
-    _databases('drop')
-    dburl = _databases('create')
+    # Create autolysis databases (sqlite3 data directory is _DATA_DIR)
+    os.chdir(_DATA_DIR)
+    dburl = {}
+    for db, url in config['databases'].items():
+        if not server_exists(url):
+            continue
+        if not database_exists(url):
+            logging.warning('Creating database %s', url)
+            create_database(url)
+        dburl[db] = url
 
     # Load datasets into databases
     for dataset in config['datasets']:
@@ -53,11 +53,11 @@ def setUpModule():
             if db not in dburl:
                 logging.warning('%s cannot use unconfigured DB %s', dataset['table'], db)
                 continue
-            db_url = dburl[db]
+            url = dburl[db]
 
             # Don't load data if a non-empty table already exists
             target = dburl[db] + '::' + dataset['table']
-            engine = sa.create_engine(db_url)
+            engine = sa.create_engine(url)
             if engine.dialect.has_table(engine.connect(), dataset['table']):
                 if Data(target).count() > 0:
                     continue
@@ -69,58 +69,18 @@ def setUpModule():
                                 dataset['table'], db, traceback.format_exc(0))
 
 
-class TestTypes(unittest.TestCase):
+class TestTypes(object):
     'Test autolysis.types'
-    longMessage = True
-
     def check_type(self, result, expected, msg):
         'result = expected, but order does not matter. Both are dict of lists'
-        self.assertEqual(set(result.keys()),
-                         set(expected.keys()), '%s keys' % msg)
+        eq_(set(result.keys()),
+            set(expected.keys()), 'Mismatch: %s keys' % msg)
         for key in expected:
-            self.assertEqual(set(result[key]),
-                             set(expected[key]), '%s - %s' % (msg, key))
+            eq_(set(result[key]),
+                set(expected[key]), 'Mismatch: %s - %s' % (msg, key))
 
     def test_types(self):
         for dataset in config['datasets']:
             data = Data(os.path.join(_DATA_DIR, dataset['path']))
             result = autolysis.types(data)
-            self.check_type(result, dataset['types'], dataset['path'])
-
-
-def _databases(operation):
-    '''
-    _databases('create') creates all databases.
-    _databases('drop') drops all databases.
-    '''
-    # Drop autolysis databases. (sqlite3 data directory is _DATA_DIR)
-    os.chdir(_DATA_DIR)
-    result = {}
-    for db, db_url in config['databases'].items():
-        # If we can't connect to the database, skip.
-        try:
-            base_url = sa.engine.url.make_url(db_url)
-            base_url.database = None
-            engine = sa.create_engine(base_url)
-            engine.connect()
-        except sa.exc.OperationalError:
-            logging.warning('Unable to connect to %s to %s', db_url, operation)
-            continue
-
-        # If we can connect to the database, try creating / dropping tables
-        if 'create' in operation.lower():
-            if not database_exists(db_url):
-                logging.warning('Creating database %s', db_url)
-                create_database(db_url)
-            result[db] = db_url
-        if 'drop' in operation.lower():
-            if database_exists(db_url):
-                logging.warning('Dropping database %s', db_url)
-                drop_database(db_url)
-            result[db] = db_url
-    return result
-
-
-if __name__ == '__main__':
-    import sys
-    sys.exit(unittest.main())
+            yield self.check_type, result, dataset['types'], dataset['table']
