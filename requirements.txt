@@ -4,10 +4,8 @@
 setuptools >= 16.0          # 16.0 has good error message support
 
 # Anaconda libraries (listed for other environments e.g. readthedocs, travis)
-dateutil >= 2.4
-numpy >= 1.10
+pandas >= 0.17              # Installs NumPy and python-dateutil
 scipy >= 0.16
-pandas >= 0.17
 blaze >= 0.8
 
 # General utilities
