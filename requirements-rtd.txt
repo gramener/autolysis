@@ -1,0 +1,5 @@
+# Requirements for readthedocs.org
+# https://readthedocs.org/dashboard/autolysis/advanced/
+
+sphinx_rtd_theme
+numpydoc
