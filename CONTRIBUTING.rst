@@ -37,24 +37,35 @@ To manually set up the development environment, follow these steps.
 3. Clone the `Autolysis repo <https://github.com/gramener/autolysis>`__::
 
         git clone git@github.com:gramener/autolysis.git
+        cd autolysis
+        git checkout dev
 
 4. Install development requirements, and also this branch in editable mode. This
    "installs" the autolysis folder in development mode. Changes to this folder
    are reflected in the environment::
 
-        pip install -r requirements.txt         # Base requirements
-        pip install -r requirements-dev.txt     # Additional development requirements
-        pip uninstall autolysis                 # Uninstall prior autolysis repo
-        pip install -e .                        # Install this repo as autolysis
+      pip install -r requirements.txt         # Base requirements
+      pip install -r requirements-dev.txt     # Additional development requirements
+      pip uninstall autolysis                 # Uninstall prior autolysis repo
+      pip install -e .                        # Install this repo as autolysis
+
+   Any changes made to the ``autolysis`` repo will automatically be reflected
+   when you import the package.
+
+5. Install MySQL and PostgreSQL. Ensure that you can connect using the following
+   SQLAlchemy strings::
+
+        postgresql://postgres@localhost/autolysistest
+        mysql+pymysql://root@localhost/autolysistest
+
+   Notes: mysql.ini must not have a ``secure-file-priv`` flag set.
 
 Contributing to autolysis
 -------------------------
 
-1. Create a branch for local development::
+1. Create a branch for local development to make local changes::
 
-    $ git checkout -b <branch-name>
-
-   Now you can make your changes locally.
+        $ git checkout -b <branch-name>
 
 2. When you're done making changes, check that your changes pass flake8 and the
    tests, as well as provide reasonable test coverage::
@@ -68,7 +79,7 @@ Contributing to autolysis
    **Note**: This uses the ``python.exe`` in your ``PATH``. To change the Python
    used, run::
 
-      export PYTHON=/path/to/python         # e.g. path to Python 3.4+
+        export PYTHON=/path/to/python         # e.g. path to Python 3.4+
 
 3. Commit your changes and push your branch::
 
