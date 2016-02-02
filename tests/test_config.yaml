@@ -12,7 +12,7 @@ datasets:
             dates: []
             groups: []
             keywords: []
-            numbers: ["Unnamed: 0", "speed", "dist"]
+            numbers: ["speed", "dist"]
     -
         url: "https://share.gramener.com/data/public/data?dl=true&file=/R/vcd.Suicide.csv"
         table: suicide
@@ -21,13 +21,13 @@ datasets:
             dates: []
             groups: ["age.group", "method", "method2", "sex"]
             keywords: []
-            numbers: ["Unnamed: 0", "age", "Freq"]
-    -
-        url: "https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv"
-        table: pincodes
-        databases: [postgres]
-        types:
-            dates: []
-            groups: ['Taluk', 'statename', 'officename', 'divisionname', 'Telephone', 'Related Suboffice', 'circlename', 'Deliverystatus', 'officeType', 'Related Headoffice', 'Districtname', 'regionname']
-            keywords: ["officeType", "officename", "Related Suboffice"]
-            numbers: ["pincode"]
+            numbers: ["age", "Freq"]
+    # -
+    #     url: "https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv"
+    #     table: pincodes
+    #     databases: [postgres]
+    #     types:
+    #         dates: []
+    #         groups: ['Taluk', 'statename', 'officename', 'divisionname', 'Telephone', 'Related Suboffice', 'circlename', 'Deliverystatus', 'officeType', 'Related Headoffice', 'Districtname', 'regionname']
+    #         keywords: ["officeType", "officename", "Related Suboffice"]
+    #         numbers: ["pincode"]

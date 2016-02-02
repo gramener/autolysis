@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-drop_test
+drop_db
 ----------------------------------
 
 Drops databases and other setup files for tests.
@@ -15,7 +15,7 @@ from sqlalchemy_utils.functions import database_exists, drop_database
 from . import DATA_DIR, config, server_exists
 
 
-def drop_test_databases():
+def drop_dbs():
     os.chdir(DATA_DIR)
     for db, url in config['databases'].items():
         if server_exists(url) and database_exists(url):

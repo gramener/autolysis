@@ -11,6 +11,7 @@ import os
 import logging
 import autolysis
 import traceback
+import pandas as pd
 import sqlalchemy as sa
 from odo import odo
 from blaze import Data
@@ -31,7 +32,7 @@ def setUpModule():
         dataset['path'] = os.path.join(DATA_DIR, dataset['table'] + '.csv')
         if not os.path.exists(dataset['path']):
             logging.info('Downloading %s', dataset['table'])
-            urlretrieve(dataset['url'], dataset['path'])
+            pd.read_csv(dataset['url']).to_csv(dataset['path'], index=False)
 
     # Create autolysis databases (sqlite3 data directory is DATA_DIR)
     os.chdir(DATA_DIR)

@@ -41,13 +41,12 @@ clean-test:
 	rm -fr htmlcov/
 
 drop-data:
-	$(PYTHON) setup.py nosetests -m"drop_test"
+	$(PYTHON) setup.py nosetests -m"drop_db"
 
 lint:
 	flake8 autolysis tests
 
 test:
-	echo PYTHON=$(PYTHON)    # TODO: remove
 	$(PYTHON) setup.py nosetests
 
 test-all:
