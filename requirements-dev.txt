@@ -2,9 +2,7 @@
 
 # Development
 wheel
-watchdog
 flake8 >= 2.5           # To detect [flake8] section in setup.cfg
-tox
 coverage
 Sphinx
 cryptography
