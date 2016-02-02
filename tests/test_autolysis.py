@@ -19,7 +19,7 @@ from nose.tools import eq_
 from six.moves.urllib.request import urlretrieve
 from sqlalchemy_utils.functions import database_exists, create_database
 
-from . import DATA_DIR, config, server_exists
+from . import DATA_DIR, config, server_exists, big_tests
 
 def setUpModule():
     'Download test data files into data/ target folder'

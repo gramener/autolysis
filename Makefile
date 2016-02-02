@@ -15,6 +15,7 @@ help:
 	@echo "test - run tests quickly with the default Python"
 	@echo "test-all - run tests on every Python version with tox"
 	@echo "coverage - check code coverage quickly with the default Python"
+	@echo "release-test - run all pre-release tests"
 	@echo "docs - generate Sphinx HTML documentation, including API docs"
 	@echo "release - package and upload a release"
 	@echo "dist - package"
@@ -49,8 +50,9 @@ lint:
 test:
 	$(PYTHON) setup.py nosetests
 
+# Run all test cases, including with big data
 test-all:
-	tox
+	AUTOLYSIS_BIG=1 $(PYTHON) setup.py nosetests
 
 coverage:
 	$(PYTHON) -m coverage run --source autolysis setup.py nosetests
@@ -76,7 +78,7 @@ endif
 showdocs:
 	$(BROWSER) docs/_build/html/index.html
 
-release-test: clean-test lint docs test coverage
+release-test: clean-test lint docs test-all coverage
 
 release: clean
 	$(PYTHON) setup.py sdist upload

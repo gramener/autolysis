@@ -6,6 +6,7 @@ databases:
 datasets:
     -
         url: "https://share.gramener.com/data/public/data?dl=true&file=/R/datasets.cars.csv"
+        big: False
         table: cars
         databases: [postgres, mysql, sqlite]
         types:
@@ -15,6 +16,7 @@ datasets:
             numbers: ["speed", "dist"]
     -
         url: "https://share.gramener.com/data/public/data?dl=true&file=/R/vcd.Suicide.csv"
+        big: False
         table: suicide
         databases: [postgres, mysql, sqlite]
         types:
@@ -22,12 +24,13 @@ datasets:
             groups: ["age.group", "method", "method2", "sex"]
             keywords: []
             numbers: ["age", "Freq"]
-    # -
-    #     url: "https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv"
-    #     table: pincodes
-    #     databases: [postgres]
-    #     types:
-    #         dates: []
-    #         groups: ['Taluk', 'statename', 'officename', 'divisionname', 'Telephone', 'Related Suboffice', 'circlename', 'Deliverystatus', 'officeType', 'Related Headoffice', 'Districtname', 'regionname']
-    #         keywords: ["officeType", "officename", "Related Suboffice"]
-    #         numbers: ["pincode"]
+    -
+        url: "https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv"
+        big: True
+        table: pincodes
+        databases: [postgres]
+        types:
+            dates: []
+            groups: ['Taluk', 'statename', 'officename', 'divisionname', 'Telephone', 'Related Suboffice', 'circlename', 'Deliverystatus', 'officeType', 'Related Headoffice', 'Districtname', 'regionname']
+            keywords: ["officeType", "officename", "Related Suboffice"]
+            numbers: ["pincode"]
