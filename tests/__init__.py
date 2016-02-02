@@ -5,11 +5,15 @@ import yaml
 import logging
 import sqlalchemy as sa
 
-_DIR = os.path.split(os.path.abspath(__file__))[0]
-_DATA_DIR = os.path.join(_DIR, 'data')
+DIR = os.path.split(os.path.abspath(__file__))[0]
+DATA_DIR = os.path.join(DIR, 'data')
+
+#
+if not os.path.exists(DATA_DIR):
+    os.makedirs(DATA_DIR)
 
 # test_config.yaml documents sources & test results on datasets to be tested
-with open(os.path.join(_DIR, 'test_config.yaml')) as _dataset_file:
+with open(os.path.join(DIR, 'test_config.yaml')) as _dataset_file:
     config = yaml.load(_dataset_file)
 
 

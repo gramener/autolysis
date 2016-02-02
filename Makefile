@@ -10,7 +10,7 @@ help:
 	@echo "clean-build - remove build artifacts"
 	@echo "clean-pyc - remove Python file artifacts"
 	@echo "clean-test - remove test and coverage artifacts"
-	@echo "drop-test - remove cached test datasets"
+	@echo "drop-data - remove cached test datasets"
 	@echo "lint - check style with flake8"
 	@echo "test - run tests quickly with the default Python"
 	@echo "test-all - run tests on every Python version with tox"
@@ -40,7 +40,7 @@ clean-test:
 	rm -f .coverage
 	rm -fr htmlcov/
 
-drop-test:
+drop-data:
 	$(PYTHON) setup.py nosetests -m"drop_test"
 
 lint:

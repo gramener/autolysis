@@ -18,8 +18,7 @@ from nose.tools import eq_
 from six.moves.urllib.request import urlretrieve
 from sqlalchemy_utils.functions import database_exists, create_database
 
-from . import _DATA_DIR, config, server_exists
-
+from . import DATA_DIR, config, server_exists
 
 def setUpModule():
     'Download test data files into data/ target folder'
@@ -28,16 +27,14 @@ def setUpModule():
     logging.basicConfig(level=logging.INFO)
 
     # Download datasets
-    if not os.path.exists(_DATA_DIR):
-        os.makedirs(_DATA_DIR)
     for dataset in config['datasets']:
-        dataset['path'] = os.path.join(_DATA_DIR, dataset['table'] + '.csv')
+        dataset['path'] = os.path.join(DATA_DIR, dataset['table'] + '.csv')
         if not os.path.exists(dataset['path']):
             logging.info('Downloading %s', dataset['table'])
             urlretrieve(dataset['url'], dataset['path'])
 
-    # Create autolysis databases (sqlite3 data directory is _DATA_DIR)
-    os.chdir(_DATA_DIR)
+    # Create autolysis databases (sqlite3 data directory is DATA_DIR)
+    os.chdir(DATA_DIR)
     dburl = {}
     for db, url in config['databases'].items():
         if not server_exists(url):
@@ -81,6 +78,6 @@ class TestTypes(object):
 
     def test_types(self):
         for dataset in config['datasets']:
-            data = Data(os.path.join(_DATA_DIR, dataset['path']))
+            data = Data(os.path.join(DATA_DIR, dataset['path']))
             result = autolysis.types(data)
             yield self.check_type, result, dataset['types'], dataset['table']
