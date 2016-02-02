@@ -22,10 +22,15 @@ Setup
   latest development version
 - Any other branches are temporary feature branches
 
-Autolysis runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
+Autolysis runs on Python 2.7, 3.4 and 3.5 in Windows and Linux.
 To set up the development environment on Ubuntu, run this script::
 
-    source <(wget -qO- https://github.com/gramener/autolysis/issues/raw/master/setup.sh)
+    sudo apt-get install -y git make
+    git clone --depth=50 --branch=dev git@github.com:gramener/autolysis.git
+    cd autolysis
+    source setup.sh
+    setup_python
+    create_databases
 
 To manually set up the development environment, follow these steps.
 

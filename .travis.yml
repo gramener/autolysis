@@ -21,6 +21,8 @@ services:
 
 install:
   - source setup.sh
+  - setup_python
+  - create_databases
 
 script:
   - make test

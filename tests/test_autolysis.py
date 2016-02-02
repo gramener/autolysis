@@ -17,7 +17,6 @@ from odo import odo
 from blaze import Data
 from nose.tools import eq_
 from six.moves.urllib.request import urlretrieve
-from sqlalchemy_utils.functions import database_exists, create_database
 
 from . import DATA_DIR, config, server_exists, big_tests
 
@@ -40,9 +39,6 @@ def setUpModule():
     for db, url in config['databases'].items():
         if not server_exists(url):
             continue
-        if not database_exists(url):
-            logging.warning('Creating database %s', url)
-            create_database(url)
         dburl[db] = url
 
     # Load datasets into databases
