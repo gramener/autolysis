@@ -9,8 +9,8 @@ language: python
 matrix:
   include:
     - python: 2.7
-    # - python: 3.4     # TODO: restore
-    # - python: 3.5     # TODO: restore
+    - python: 3.4
+    - python: 3.5
 
 addons:
   postgresql: "9.3"
