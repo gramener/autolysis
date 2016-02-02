@@ -25,7 +25,7 @@ Setup
 Autolysis runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
 To set up the development environment on Ubuntu, run this script::
 
-    source <(wget -qO- https://github.com/gramener/autolysis/issues/raw/master/setup-dev.sh)
+    source <(wget -qO- https://github.com/gramener/autolysis/issues/raw/master/setup.sh)
 
 To manually set up the development environment, follow these steps.
 

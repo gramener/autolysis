@@ -1,18 +1,26 @@
-# Config file for automatic testing at travis-ci.org
-# This file will be regenerated if you run travis_pypi_setup.py
+# Set up a Python environment in Travis
+
+# Faster boot time using a container-based environment
+# https://docs.travis-ci.com/user/ci-environment/
+sudo: False
 
 language: python
 
-env:
-  - TOXENV=py35
-  - TOXENV=py34
-  - TOXENV=py33
-  - TOXENV=py27
-  - TOXENV=py26
-  - TOXENV=pypy
+matrix:
+  include:
+    - python: 2.7
+    # - python: 3.4     # TODO: restore
+    # - python: 3.5     # TODO: restore
 
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: pip install -U tox
+addons:
+  postgresql: "9.3"
 
-# command to run tests, e.g. python setup.py test
-script: tox
+services:
+  - mysql
+  - postgresql
+
+install:
+  - source setup.sh
+
+script:
+  - make test

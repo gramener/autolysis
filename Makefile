@@ -47,6 +47,7 @@ lint:
 	flake8 autolysis tests
 
 test:
+	echo PYTHON=$(PYTHON)    # TODO: remove
 	$(PYTHON) setup.py nosetests
 
 test-all:
