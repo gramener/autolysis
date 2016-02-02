@@ -1,7 +1,6 @@
 # Additional libraries required to build Autolysis
 
 # Development
-bumpversion
 wheel
 watchdog
 flake8 >= 2.5           # To detect [flake8] section in setup.cfg
