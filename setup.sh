@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 #
-# Autolysis setup script on Linux system. Usage:
-#
-#   source <(wget -qO- https://raw.githubusercontent.com/gramener/autolysis/setup.sh)
+# Autolysis setup script on Linux system. See this link for usage:
+# https://github.com/gramener/autolysis/blob/dev/CONTRIBUTING.rst
 
-# Install git and make
-# Clone autolysis
+install_databases() {
+    echo "Installing PostgreSQL"
+    sudo apt-get -y install postgresql postgresql-contrib
+    echo "Installing MySQL"
+    sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install mysql-server
+}
+
 
 setup_python() {
     # Install in $CONDAPATH, default to $HOME/miniconda
@@ -22,15 +26,18 @@ setup_python() {
     conda update conda                        # Update Miniconda
 
     # Create a test environment called autolysis
-    conda create -n autolysis --file requirements.txt --file requirements-dev.txt python=$TRAVIS_PYTHON_VERSION
-    source activate autolysis
+    conda create -n autolysis-$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt python=$TRAVIS_PYTHON_VERSION
+    source activate autolysis-$TRAVIS_PYTHON_VERSION
+
+    # Remove miniconda setup
+    rm miniconda.sh
 }
 
 create_databases() {
     echo "Creating PostgreSQL database and user"
-    psql --quiet --username postgres <<EOF
+    sudo -u postgres psql --quiet <<EOF
 CREATE DATABASE autolysistest;
-CREATE USER autolysistest WITH PASSWORD 'autolysistest';
+CREATE USER autolysistest WITH SUPERUSER PASSWORD 'autolysistest';
 GRANT ALL PRIVILEGES ON DATABASE autolysistest TO autolysistest;
 EOF
 

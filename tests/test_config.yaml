@@ -1,6 +1,6 @@
 databases:
-    postgres: postgresql://postgres@localhost/autolysistest
-    mysql: mysql+pymysql://root@localhost/autolysistest
+    postgres: postgresql://autolysistest:autolysistest@localhost/autolysistest
+    mysql: mysql+pymysql://autolysistest:autolysistest@localhost/autolysistest
     sqlite: sqlite:///autolysistest.sqlite3
 
 datasets:

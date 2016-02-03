@@ -25,10 +25,15 @@ Setup
 Autolysis runs on Python 2.7, 3.4 and 3.5 in Windows and Linux.
 To set up the development environment on Ubuntu, run this script::
 
+    sudo apt-get update
     sudo apt-get install -y git make
-    git clone --depth=50 --branch=dev git@github.com:gramener/autolysis.git
+    git clone --branch=dev https://github.com/gramener/autolysis.git
+    # Or, if you want to commit into the repository and have access, use:
+    # git clone --branch=dev git@github.com:gramener/autolysis.git
     cd autolysis
     source setup.sh
+    install_databases
+    export TRAVIS_PYTHON_VERSION=2.7    # Change to 3.4 or 3.5 if you wish
     setup_python
     create_databases
 
