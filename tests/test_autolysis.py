@@ -15,7 +15,7 @@ import pandas as pd
 import sqlalchemy as sa
 from odo import odo
 from blaze import Data
-from nose.tools import eq_
+from nose.tools import eq_, ok_
 from six.moves.urllib.request import urlretrieve
 
 from . import DATA_DIR, config, server_exists, big_tests
@@ -61,6 +61,18 @@ def setUpModule():
             except sa.exc.InternalError:
                 logging.warning('Loading %s into %s failed: %s',
                                 dataset['table'], db, traceback.format_exc(0))
+
+
+class TestImport(object):
+    'Test autolysis import basics'
+    def test_version(self):
+        'autolysis has a version'
+        ok_(hasattr(autolysis, '__version__'))
+
+    def test_release(self):
+        'autolysis has a release information dict'
+        ok_(hasattr(autolysis, 'release'))
+        ok_(isinstance(autolysis.release, dict))
 
 
 class TestTypes(object):
