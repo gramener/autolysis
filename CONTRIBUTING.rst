@@ -141,5 +141,13 @@ When releasing a new version of Autolysis:
 
     git checkout master
     git merge dev
-    git tag -a v1.x.x           # Annotate with a one-line summary of features
+    git tag -a vx.x.x           # Annotate with a one-line summary of features
     git push --follow-tags
+
+5. To `release to PyPi`_, run::
+
+    make clean
+    python setup.py sdist bdist_wheel --universal
+    twine upload dist/*
+
+.. _release to PyPi: https://packaging.python.org/en/latest/distributing.html
