@@ -16,9 +16,9 @@ import sqlalchemy as sa
 from odo import odo
 from blaze import Data
 from nose.tools import eq_, ok_
-from six.moves.urllib.request import urlretrieve
 
-from . import DATA_DIR, config, server_exists, big_tests
+from . import DATA_DIR, config, server_exists
+
 
 def setUpModule():
     'Download test data files into data/ target folder'
@@ -87,6 +87,11 @@ class TestTypes(object):
 
     def test_types(self):
         for dataset in config['datasets']:
-            data = Data(os.path.join(DATA_DIR, dataset['path']))
-            result = autolysis.types(data)
-            yield self.check_type, result, dataset['types'], dataset['table']
+            uris = [dataset['path']]
+            for db in dataset['databases']:
+                if db in config['databases']:
+                    uris.append(config['databases'][db] + '::' + dataset['table'])
+            for uri in uris:
+                data = Data(uri)
+                result = autolysis.types(data)
+                yield self.check_type, result, dataset['types'], dataset['table']
