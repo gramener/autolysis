@@ -168,10 +168,11 @@ def groupmeans(data, groups, numbers,
 
     # compute mean of each number column
     means = {col: bz.into(float, data[col].mean()) for col in numbers}
+    # pre-create aggregation expressions (mean, count)
+    agg = {number: bz.mean(data[number]) for number in numbers}
+    agg['#'] = bz.count(data)
     results = []
     for group in groups:
-        agg = {number: bz.mean(data[number]) for number in numbers}
-        agg['#'] = bz.count(data)
         ave = bz.by(data[group], **agg).sort('#', ascending=False)
         ave = bz.into(pd.DataFrame, ave)
         ave.index = ave[group]
