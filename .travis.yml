@@ -2,7 +2,10 @@
 
 # Faster boot time using a container-based environment
 # https://docs.travis-ci.com/user/ci-environment/
-sudo: False
+# sudo: False
+# Opt into fully virtualized infrastructure
+# cf http://blog.travis-ci.com/2015-03-31-docker-default-on-the-way/
+sudo: required
 
 language: python
 
