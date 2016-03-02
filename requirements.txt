@@ -11,3 +11,4 @@ blaze >= 0.8
 # General utilities
 six                         # Python 3 compatibility
 pathlib                     # Manipulate paths. Part of Python 3.3+
+orderedattrdict
