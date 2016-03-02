@@ -163,19 +163,20 @@ def groupmeans(data, groups, numbers,
     '''
 
     if minsize is None:
-        minsize = max(data.nrows / 100, 10)
+        # compute nrows, bz.compute(data.nrows) doesn't work for sqlite
+        minsize = max(bz.into(int, data.nrows) / 100, 10)
 
-    means = {col: data[col].mean() for col in numbers}
+    # compute mean of each number column
+    means = {col: bz.into(float, data[col].mean()) for col in numbers}
+    # pre-create aggregation expressions (mean, count)
+    agg = {number: bz.mean(data[number]) for number in numbers}
+    agg['#'] = bz.count(data)
     results = []
-
     for group in groups:
-        agg = {number: bz.mean(data[number]) for number in numbers}
-        agg['#'] = bz.count(data)
         ave = bz.by(data[group], **agg).sort('#', ascending=False)
         ave = bz.into(pd.DataFrame, ave)
         ave.index = ave[group]
         sizes = ave['#']
-
         # Each group should contain at least minsize values
         biggies = sizes[sizes >= minsize].index
         # ... and at least 2 groups overall, to compare.
@@ -201,7 +202,7 @@ def groupmeans(data, groups, numbers,
                 'group': group,
                 'number': number,
                 'prob': prob,
-                'gain': (sorted_cats.iloc[-1] / means[number] - 1)[0],
+                'gain': sorted_cats.iloc[-1] / means[number] - 1,
                 'biggies': ave.ix[biggies][number],
                 'means': ave[[number, '#']].sort_values(by=number),
             })
