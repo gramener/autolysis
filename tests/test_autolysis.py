@@ -9,6 +9,7 @@ Tests for `autolysis` module.
 
 import os
 import logging
+import warnings
 import autolysis
 import traceback
 import pandas as pd
@@ -75,6 +76,20 @@ class TestImport(object):
         ok_(isinstance(autolysis.release, dict))
 
 
+class TestGetNumericCols(object):
+    'Test autolysis.get_numeric_cols'
+    def test_numeric_cols(self):
+        for dataset in config['datasets']:
+            uris = [dataset['path']]
+            for db in dataset['databases']:
+                if db in config['databases']:
+                    uris.append(config['databases'][db] + '::' + dataset['table'])
+            for uri in uris:
+                data = Data(uri)
+                result = autolysis.get_numeric_cols(data.dshape)
+                eq_(set(result), set(dataset['types']['numbers']))
+
+
 class TestTypes(object):
     'Test autolysis.types'
     def check_type(self, result, expected, msg):
@@ -95,3 +110,19 @@ class TestTypes(object):
                 data = Data(uri)
                 result = autolysis.types(data)
                 yield self.check_type, result, dataset['types'], dataset['table']
+
+
+class TestGroupMeans(object):
+    'Test autolysis.groupmeans'
+    def test_groupmeans(self):
+        for dataset in config['datasets']:
+            uris = [dataset['path']]
+            for db in dataset['databases']:
+                if db in config['databases']:
+                    uris.append(config['databases'][db] + '::' + dataset['table'])
+            for uri in uris:
+                data = Data(uri)
+                types = autolysis.types(data)
+                result = autolysis.groupmeans(data, types['groups'], types['numbers'])
+                warnings.warn("Only checking if autolysis.groupmeans"
+                              " is running without throwing any error.")
