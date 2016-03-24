@@ -26,8 +26,10 @@ setup_python() {
     conda update conda                        # Update Miniconda
 
     # Create a test environment called autolysis
-    conda create -n autolysis-$TRAVIS_PYTHON_VERSION --file requirements.txt --file requirements-dev.txt python=$TRAVIS_PYTHON_VERSION
+    conda create -n autolysis-$TRAVIS_PYTHON_VERSION --file requirements-conda.txt python=$TRAVIS_PYTHON_VERSION
     source activate autolysis-$TRAVIS_PYTHON_VERSION
+    pip install -r requirements.txt
+    pip install -r requirements-dev.txt
 
     # Remove miniconda setup
     rm miniconda.sh
