@@ -5,12 +5,13 @@ import os
 import json
 import datetime
 import dateutil
+import itertools
 import numpy as np
 import blaze as bz
 import pandas as pd
-
+from orderedattrdict import AttrDict
 from scipy.stats.mstats import ttest_ind
-
+from scipy.stats import chi2_contingency
 __folder__ = os.path.split(os.path.abspath(__file__))[0]
 
 # Load autolysis.__version__ from release.json
@@ -142,7 +143,7 @@ def types(data):
 def groupmeans(data, groups, numbers,
                cutoff=.01,
                quantile=.95,
-               minsize=None):
+               min_size=None):
     '''
     Yields the significant differences in average between every pair of
     groups and numbers.
@@ -157,14 +158,14 @@ def groupmeans(data, groups, numbers,
     quantile : number that represents target improvement. Defaults to .95.
         The ``diff`` returned is the % impact of everyone moving to the 95th
         percentile
-    minsize : each group should contain at least minsize values.
-        If minsize=None, automatically set the minimum size to
+    min_size : each group should contain at least min_size values.
+        If min_size=None, automatically set the minimum size to
         1% of the dataset, or 10, whichever is larger.
     '''
 
-    if minsize is None:
+    if min_size is None:
         # compute nrows, bz.compute(data.nrows) doesn't work for sqlite
-        minsize = max(bz.into(int, data.nrows) / 100, 10)
+        min_size = max(bz.into(int, data.nrows) / 100, 10)
 
     # compute mean of each number column
     means = {col: bz.into(float, data[col].mean()) for col in numbers}
@@ -177,8 +178,8 @@ def groupmeans(data, groups, numbers,
         ave = bz.into(pd.DataFrame, ave)
         ave.index = ave[group]
         sizes = ave['#']
-        # Each group should contain at least minsize values
-        biggies = sizes[sizes >= minsize].index
+        # Each group should contain at least min_size values
+        biggies = sizes[sizes >= min_size].index
         # ... and at least 2 groups overall, to compare.
         if len(biggies) < 2:
             continue
@@ -211,3 +212,149 @@ def groupmeans(data, groups, numbers,
     if len(results) > 0:
         results = results.set_index(['group', 'number'])
     return results
+
+
+def _crosstab(index, column, values=None, correction=False):
+    '''
+    Computes a crosstab of two series (an ``index`` and a ``column``), and
+    returns its observed cross-tabulation, expected cross-tabulation, and
+    statistical parameters.
+
+    Parameters
+    ----------
+    index : array-like, Series
+        Labels for the index
+    column : array-like, Series
+        Labels for the column
+    values : array-like, Series
+        Optional weights to aggregate by summing up
+    correction : boolean
+        If True, and the degrees of freedom is 1, apply Yates' correction for
+        continuity. The effect of the correction is to adjust each observed
+        value by 0.5 towards the corresponding expected value. Defaults to False
+        since Cramer's V (a more useful metric than chi-squared) must be computed
+        without this correction.
+
+    Returns
+    -------
+    observed : Pandas DataFrame
+        Actual observed frequencies, i.e. count of the observations
+    expected : Pandas DataFrame
+        Expected frequencies if index and column are independent
+    p : float
+        Significance of the crosstab. Low values indicate index and column and
+        dependent. Ranges from 0 (perfectly dependent) to 1 (independent)
+    chi2 : float
+        chi-squared value. High values indicate index and column are dependent.
+    dof : int
+        Degrees of freedom
+    V : float
+        `Cramer's V <http://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_ ranges from
+        0 to 1. 0 indicates independent columns. 0.5 indicates strong relation.
+        1 indicates a perfect relation.
+
+    Examples
+    --------
+    Let's check, for example, whether language and city are independent. This
+    is, do people in a specific city prefer a certain language, or vice versa::
+
+        data = pd.DataFrame({
+            'city':  ['London', 'Shanghai', 'London', 'Shanghai'],
+            'language': ['English', 'English', 'Mandarin', 'Mandarin'],
+            'people': [90, 50, 40, 350],
+        })
+
+        result = autolyse.crosstab(
+            index=data['city'],
+            column=data['language'],
+            values=data['people'])
+
+    This provides an actual observation::
+
+        In [5]: result['observed']
+        Out[5]:
+        language  English  Mandarin
+        city
+        London         90        40
+        Shanghai       50       350
+
+    However, if the ``city`` and ``language`` were independent, we would expect::
+
+        In [6]: result['expected']
+        Out[6]:
+        language     English    Mandarin
+        city
+        London     34.339623   95.660377
+        Shanghai  105.660377  294.339623
+
+    `Cramer's V <http://en.wikipedia.org/wiki/Cram%C3%A9r%27s_V>`_
+    tells us whether this difference is significant enough to say that
+    ``language`` and ``city`` are independent::
+
+        In [7]: result['V']
+        Out[7]: 0.54866228139712236
+
+    Any value above 0.5 is a strong indication of a relationship. This says
+    that ``language`` and ``city`` are dependent.
+    '''
+    observed = pd.crosstab(index, column, values, aggfunc='sum').replace('', np.nan).fillna(0)
+    chi2, p, dof, expected_values = chi2_contingency(observed.values,
+                                                     correction=correction)
+    expected = pd.DataFrame(expected_values,
+                            index=observed.index,
+                            columns=observed.columns)
+    n = pd.np.sum(observed.values)
+    nindex, ncolumns = len(observed.index), len(observed.columns)
+    return {
+        'observed': observed,
+        'expected': expected,
+        'chi2': chi2,
+        'p': p,
+        'dof': dof,
+        'V': (chi2 / n / (min(nindex, ncolumns) - 1)) ** 0.5,
+    }
+
+
+def crosstabs(data, columns=None, values=None, correction=False, pairs_top=10000):
+    '''
+    Identifies the strength of relationship between every pair of categorical
+    columns in a DataFrame
+
+    Parameters
+    ----------
+    data : Blaze data
+        A data with at least 2 columns having categorical values.
+    columns : list of column names in data
+        If not specified, uses ``autolyse.types(data)['groups']`` to identify
+        all columns with categorical data.
+    values : str, column name
+        Optional column that contains weights to aggregate by summing up. By
+        default, each row is counted as an observation.
+    correction : boolean
+        If True, and the degrees of freedom is 1, apply Yates' correction for
+        continuity. The effect of the correction is to adjust each observed
+        value by 0.5 towards the corresponding expected value. Defaults to False
+        since Cramer's V (a more useful metric than chi-squared) must be computed
+        without this correction.
+    pairs_top: integer, Pick only top 10000 pairs by default
+    '''
+    if columns is None:
+        columns = types(data)['groups']
+
+    result = AttrDict()
+    parameters = ('p', 'chi2', 'dof', 'V')
+    for index, column in itertools.combinations(columns, 2):
+        agg_col = values if values in data.columns else column
+        agg_func = bz.count(data[agg_col]) if agg_col == column else bz.sum(data[agg_col])
+        data_grouped = bz.into(pd.DataFrame,
+                               bz.by(bz.merge(data[index], data[column]),
+                                     values=agg_func).head(pairs_top))
+        r = _crosstab(data_grouped[index],
+                      column=data_grouped[column],
+                      values=data_grouped['values'],
+                      correction=correction)
+        result[(index, column)] = {'observed': r['observed'],
+                                   'expected': r['expected'],
+                                   'stats': {param: r[param] for param in parameters}
+                                   }
+    return result

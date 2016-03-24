@@ -7,6 +7,11 @@ from pip.req import parse_requirements
 from pip.download import PipSession
 import json
 
+
+def req(path):
+    return [str(entry.req) for entry in parse_requirements(path, session=PipSession())]
+
+
 setup(
     long_description=(open('README.rst').read() + '\n\n' +
                       open('HISTORY.rst').read().replace('.. :changelog:', '')),
@@ -20,8 +25,7 @@ setup(
       'autolysis': ['release.json']
     },
     include_package_data=True,
-    install_requires=[str(entry.req) for entry in
-                      parse_requirements('requirements.txt', session=PipSession())],
+    install_requires=req('requirements-conda.txt') + req('requirements.txt'),
     zip_safe=False,
     test_suite='tests',
     tests_require=[],
