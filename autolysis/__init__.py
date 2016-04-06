@@ -189,10 +189,18 @@ def groupmeans(data, groups, numbers,
             sorted_cats = ave[number][biggies].dropna().sort_values()
             if len(sorted_cats) < 2:
                 continue
-            lo = bz.into(list,
-                         data[number][data[group] == sorted_cats.index[0]])
-            hi = bz.into(list,
-                         data[number][data[group] == sorted_cats.index[-1]])
+            sohi = sorted_cats.index[-1]
+            solo = sorted_cats.index[0]
+
+            # If sorted_cats.index items are of numpy type, then
+            # convert them to native type, skip conversion for unicode, str
+            # See https://github.com/blaze/blaze/issues/1461
+            if isinstance(solo, np.generic):
+                solo, sohi = solo.item(), sohi.item()
+
+            lo = bz.into(list, data[number][data[group] == solo])
+            hi = bz.into(list, data[number][data[group] == sohi])
+
             _, prob = ttest_ind(
                 np.ma.masked_array(lo, np.isnan(lo)),
                 np.ma.masked_array(hi, np.isnan(hi))
