@@ -34,3 +34,16 @@ datasets:
             groups: ['Taluk', 'statename', 'officename', 'divisionname', 'Telephone', 'Related Suboffice', 'circlename', 'Deliverystatus', 'officeType', 'Related Headoffice', 'Districtname', 'regionname']
             keywords: ["officeType", "officename", "Related Suboffice"]
             numbers: ["pincode"]
+    -
+        url: "http://demo.gramener.com/static/datasets/Ecdat.BudgetFood.csv"
+        big: False
+        table: budgetfood
+        databases: [postgres, mysql, sqlite]
+        types:
+            dates: []
+            groups: ["sex"]
+            keywords: []
+            numbers: ["town", "age", "totexp", "wfood", "size"]
+        changedtypes:
+            groups: ["sex", "town"]
+            numbers: ["age", "totexp", "wfood", "size"]
