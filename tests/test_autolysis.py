@@ -123,6 +123,22 @@ class TestGroupMeans(object):
             for uri in uris:
                 data = Data(uri)
                 types = autolysis.types(data)
-                result = autolysis.groupmeans(data, types['groups'], types['numbers'])
+                autolysis.groupmeans(data, types['groups'], types['numbers'])
+                warnings.warn("Only checking if autolysis.groupmeans"
+                              " is running without throwing any error.")
+
+    def test_changed_types(self):
+        # Issue #24
+        for dataset in config['datasets']:
+            if 'changedtypes' not in dataset:
+                continue
+            uris = [dataset['path']]
+            for db in dataset['databases']:
+                if db in config['databases']:
+                    uris.append(config['databases'][db] + '::' + dataset['table'])
+            for uri in uris:
+                data = Data(uri)
+                types = dataset['changedtypes']
+                autolysis.groupmeans(data, types['groups'], types['numbers'])
                 warnings.warn("Only checking if autolysis.groupmeans"
                               " is running without throwing any error.")
