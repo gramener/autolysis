@@ -30,6 +30,7 @@ def setUpModule():
     # Download datasets
     for dataset in config['datasets']:
         dataset['path'] = os.path.join(DATA_DIR, dataset['table'] + '.csv')
+        dataset['uris'] = [dataset['path']]
         if not os.path.exists(dataset['path']):
             logging.info('Downloading %s', dataset['table'])
             pd.read_csv(dataset['url']).to_csv(dataset['path'], index=False)
@@ -52,6 +53,7 @@ def setUpModule():
 
             # Don't load data if a non-empty table already exists
             target = dburl[db] + '::' + dataset['table']
+            dataset['uris'].append(target)
             engine = sa.create_engine(url)
             if engine.dialect.has_table(engine.connect(), dataset['table']):
                 if Data(target).count() > 0:
@@ -80,11 +82,7 @@ class TestGetNumericCols(object):
     "Test autolysis.get_numeric_cols"
     def test_numeric_cols(self):
         for dataset in config['datasets']:
-            uris = [dataset['path']]
-            for db in dataset['databases']:
-                if db in config['databases']:
-                    uris.append(config['databases'][db] + '::' + dataset['table'])
-            for uri in uris:
+            for uri in dataset['uris']:
                 data = Data(uri)
                 result = autolysis.get_numeric_cols(data.dshape)
                 eq_(set(result), set(dataset['types']['numbers']))
@@ -102,11 +100,7 @@ class TestTypes(object):
 
     def test_types(self):
         for dataset in config['datasets']:
-            uris = [dataset['path']]
-            for db in dataset['databases']:
-                if db in config['databases']:
-                    uris.append(config['databases'][db] + '::' + dataset['table'])
-            for uri in uris:
+            for uri in dataset['uris']:
                 data = Data(uri)
                 result = autolysis.types(data)
                 self.check_type(result, dataset['types'], dataset['table'])
@@ -116,11 +110,7 @@ class TestGroupMeans(object):
     "Test autolysis.groupmeans"
     def test_groupmeans(self):
         for dataset in config['datasets']:
-            uris = [dataset['path']]
-            for db in dataset['databases']:
-                if db in config['databases']:
-                    uris.append(config['databases'][db] + '::' + dataset['table'])
-            for uri in uris:
+            for uri in dataset['uris']:
                 data = Data(uri)
                 types = autolysis.types(data)
                 autolysis.groupmeans(data, types['groups'], types['numbers'])
@@ -131,11 +121,7 @@ class TestGroupMeans(object):
         for dataset in config['datasets']:
             if 'changedtypes' not in dataset:
                 continue
-            uris = [dataset['path']]
-            for db in dataset['databases']:
-                if db in config['databases']:
-                    uris.append(config['databases'][db] + '::' + dataset['table'])
-            for uri in uris:
+            for uri in dataset['uris']:
                 data = Data(uri)
                 types = dataset['changedtypes']
                 autolysis.groupmeans(data, types['groups'], types['numbers'])
