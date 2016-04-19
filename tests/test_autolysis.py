@@ -6,17 +6,19 @@ test_autolysis
 
 Tests for `autolysis` module.
 """
+from __future__ import absolute_import, division, print_function
 
 import os
+import re
 import logging
-import warnings
-import autolysis
 import traceback
 import pandas as pd
+import autolysis as al
 import sqlalchemy as sa
 from odo import odo
 from blaze import Data
 from nose.tools import eq_, ok_
+from numpy.testing import assert_array_almost_equal as aaq_
 
 from . import DATA_DIR, config, server_exists
 
@@ -66,16 +68,29 @@ def setUpModule():
                                 dataset['table'], db, traceback.format_exc(0))
 
 
+def getengine(uris):
+    'Return sql engine or csv for given uri'
+    engines = []
+    for uri in uris:
+        engines.append(
+            re.sub(
+                r'[^a-zA-Z+]',
+                r'',
+                re.search(r'([\w|+]+:\/\/)|(.csv)', uri).group())
+            )
+    return engines
+
+
 class TestImport(object):
     "Test autolysis import basics"
     def test_version(self):
         "autolysis has a version"
-        ok_(hasattr(autolysis, '__version__'))
+        ok_(hasattr(al, '__version__'))
 
     def test_release(self):
         "autolysis has a release information dict"
-        ok_(hasattr(autolysis, 'release'))
-        ok_(isinstance(autolysis.release, dict))
+        ok_(hasattr(al, 'release'))
+        ok_(isinstance(al.release, dict))
 
 
 class TestGetNumericCols(object):
@@ -84,8 +99,9 @@ class TestGetNumericCols(object):
         for dataset in config['datasets']:
             for uri in dataset['uris']:
                 data = Data(uri)
-                result = autolysis.get_numeric_cols(data.dshape)
+                result = al.get_numeric_cols(data.dshape)
                 eq_(set(result), set(dataset['types']['numbers']))
+            print('for %s on %s' % (dataset['table'], getengine(dataset['uris'])))
 
 
 class TestTypes(object):
@@ -98,25 +114,37 @@ class TestTypes(object):
             eq_(set(result[key]),
                 set(expected[key]), 'Mismatch: %s - %s' % (msg, key))
 
-    def test_types(self):
+    def test_detect_types(self):
         for dataset in config['datasets']:
             for uri in dataset['uris']:
                 data = Data(uri)
-                result = autolysis.types(data)
+                result = al.types(data)
                 self.check_type(result, dataset['types'], dataset['table'])
+            print('for %s on %s' % (dataset['table'], getengine(dataset['uris'])))
 
 
 class TestGroupMeans(object):
     "Test autolysis.groupmeans"
-    def test_groupmeans(self):
+    def check_gain(self, result, expected, msg):
+        if len(result.index):
+            # Ignoring type check, SQL might return Deciaml
+            aaq_(result.gain.sort_index().values.astype(float),
+                 expected,
+                 4,
+                 'Mismatch with URI: %s ' % msg)
+        else:
+            eq_([], expected, 'Mismatch with URI: %s ' % msg)
+
+    def test_gains(self):
         for dataset in config['datasets']:
             for uri in dataset['uris']:
                 data = Data(uri)
-                types = autolysis.types(data)
-                autolysis.groupmeans(data, types['groups'], types['numbers'])
-                warnings.warn('Tests only if runs without throwing error.')
+                types = al.types(data)
+                result = al.groupmeans(data, types['groups'], types['numbers'])
+                self.check_gain(result, dataset['groupmeans']['gain'], uri)
+            print('for %s on %s' % (dataset['table'], getengine(dataset['uris'])))
 
-    def test_changed_types(self):
+    def test_gains_changed_types(self):
         # Issue #24
         for dataset in config['datasets']:
             if 'changedtypes' not in dataset:
@@ -124,5 +152,6 @@ class TestGroupMeans(object):
             for uri in dataset['uris']:
                 data = Data(uri)
                 types = dataset['changedtypes']
-                autolysis.groupmeans(data, types['groups'], types['numbers'])
-                warnings.warn('Tests only if runs without throwing error.')
+                result = al.groupmeans(data, types['groups'], types['numbers'])
+                self.check_gain(result, types['groupmeans']['gain'], uri)
+            print('for %s on %s' % (dataset['table'], getengine(dataset['uris'])))
