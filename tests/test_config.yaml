@@ -39,7 +39,7 @@ datasets:
             keywords: [officeType, officename, Related Suboffice]
             numbers: [pincode]
         groupmeans:
-            gain: []
+            gain: [ 0.66, 0.66, 0.0028, 0.0088, 0.689]
     -
         url: http://demo.gramener.com/static/datasets/Ecdat.BudgetFood.csv
         big: False
