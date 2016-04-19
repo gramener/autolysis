@@ -128,8 +128,10 @@ class TestGroupMeans(object):
     def check_gain(self, result, expected, msg):
         if len(result.index):
             # Ignoring type check, SQL might return Deciaml
-            aaq_(result.gain.values.astype(float), expected,
-                 4, 'Mismatch with URI: %s ' % msg)
+            aaq_(result.gain.sort_index().values.astype(float),
+                 expected,
+                 4,
+                 'Mismatch with URI: %s ' % msg)
         else:
             eq_([], expected, 'Mismatch with URI: %s ' % msg)
 

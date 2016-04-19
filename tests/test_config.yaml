@@ -27,7 +27,7 @@ datasets:
             keywords: []
             numbers: [age, Freq]
         groupmeans:
-            gain: [0.6000, 0.4941, 2.4484, 2.4484, 0.2718]
+            gain: [0.4942, 0.6000, 2.4484, 2.4484, 0.2718]
     -
         url: https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv
         big: True
@@ -39,7 +39,7 @@ datasets:
             keywords: [officeType, officename, Related Suboffice]
             numbers: [pincode]
         groupmeans:
-            gain: [ 0.66, 0.66, 0.0028, 0.0088, 0.689]
+            gain: [0.66, 0.66, 0.0028, 0.0088, 0.689]
     -
         url: http://demo.gramener.com/static/datasets/Ecdat.BudgetFood.csv
         big: False
@@ -54,6 +54,6 @@ datasets:
             groups: [sex, town]
             numbers: [age, totexp, wfood, size]
             groupmeans:
-                gain: [0.1768, 0.0566, 0.0506, 0.0655, 0.1174, 0.199, 0.216, 0.0531]
+                gain: [0.1768, 0.0655, 0.0566, 0.0506, 0.1174, 0.0531, 0.199, 0.216]
         groupmeans:
-            gain: [0.0353, 0.1768, 0.0566, 0.0506, 0.0655]
+            gain: [0.1768, 0.0655, 0.0566, 0.0353, 0.0506]
