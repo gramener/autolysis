@@ -5,7 +5,7 @@ databases:
 
 datasets:
     -
-        url: "https://share.gramener.com/data/public/data?dl=true&file=/R/datasets.cars.csv"
+        url: https://share.gramener.com/data/public/data?dl=true&file=/R/datasets.cars.csv
         big: False
         table: cars
         databases: [postgres, mysql, sqlite]
@@ -13,37 +13,37 @@ datasets:
             dates: []
             groups: []
             keywords: []
-            numbers: ["speed", "dist"]
+            numbers: [speed, dist]
     -
-        url: "https://share.gramener.com/data/public/data?dl=true&file=/R/vcd.Suicide.csv"
+        url: https://share.gramener.com/data/public/data?dl=true&file=/R/vcd.Suicide.csv
         big: False
         table: suicide
         databases: [postgres, mysql, sqlite]
         types:
             dates: []
-            groups: ["age.group", "method", "method2", "sex"]
+            groups: [age.group, method, method2, sex]
             keywords: []
-            numbers: ["age", "Freq"]
+            numbers: [age, Freq]
     -
-        url: "https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv"
+        url: https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv
         big: True
         table: pincodes
         databases: [postgres]
         types:
             dates: []
-            groups: ['Taluk', 'statename', 'officename', 'divisionname', 'Telephone', 'Related Suboffice', 'circlename', 'Deliverystatus', 'officeType', 'Related Headoffice', 'Districtname', 'regionname']
-            keywords: ["officeType", "officename", "Related Suboffice"]
-            numbers: ["pincode"]
+            groups: [Taluk, statename, officename, divisionname, Telephone, Related Suboffice, circlename, Deliverystatus, officeType, Related Headoffice, Districtname, regionname]
+            keywords: [officeType, officename, Related Suboffice]
+            numbers: [pincode]
     -
-        url: "http://demo.gramener.com/static/datasets/Ecdat.BudgetFood.csv"
+        url: http://demo.gramener.com/static/datasets/Ecdat.BudgetFood.csv
         big: False
         table: budgetfood
         databases: [postgres, mysql, sqlite]
         types:
             dates: []
-            groups: ["sex"]
+            groups: [sex]
             keywords: []
-            numbers: ["town", "age", "totexp", "wfood", "size"]
+            numbers: [town, age, totexp, wfood, size]
         changedtypes:
-            groups: ["sex", "town"]
-            numbers: ["age", "totexp", "wfood", "size"]
+            groups: [sex, town]
+            numbers: [age, totexp, wfood, size]
