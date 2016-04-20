@@ -16,6 +16,7 @@ datasets:
             numbers: [speed, dist]
         groupmeans:
             gain: []
+        crosstabs: []
     -
         url: https://share.gramener.com/data/public/data?dl=true&file=/R/vcd.Suicide.csv
         big: False
@@ -28,6 +29,13 @@ datasets:
             numbers: [age, Freq]
         groupmeans:
             gain: [0.4942, 0.6000, 2.4484, 2.4484, 0.2718]
+        crosstabs: [
+             {V: 0.0, chi2: 0.0, dof: 32, p: 1.0},
+             {V: 0.0, chi2: 0.0, dof: 28, p: 1.0},
+             {V: 0.0, chi2: 0.0, dof: 4, p: 1.0},
+             {V: 1.0, chi2: 2142.0, dof: 56, p: 0.0},
+             {V: 0.0, chi2: 0.0, dof: 8, p: 1.0},
+             {V: 0.0, chi2: 0.0, dof: 7, p: 1.0}]
     -
         url: https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv
         big: True
@@ -40,6 +48,7 @@ datasets:
             numbers: [pincode]
         groupmeans:
             gain: [0.66, 0.66, 0.0028, 0.0088, 0.689]
+        crosstabs: [] # FIX: Failing case
     -
         url: http://demo.gramener.com/static/datasets/Ecdat.BudgetFood.csv
         big: False
@@ -57,3 +66,4 @@ datasets:
                 gain: [0.1768, 0.0655, 0.0566, 0.0506, 0.1174, 0.0531, 0.199, 0.216]
         groupmeans:
             gain: [0.1768, 0.0655, 0.0566, 0.0353, 0.0506]
+        crosstabs: []

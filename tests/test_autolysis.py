@@ -155,3 +155,26 @@ class TestGroupMeans(object):
                 result = al.groupmeans(data, types['groups'], types['numbers'])
                 self.check_gain(result, types['groupmeans']['gain'], uri)
             print('for %s on %s' % (dataset['table'], getengine(dataset['uris'])))
+
+
+class TestCrossTabs(object):
+    "Test autolysis.crosstabs"
+    def check_stats(self, result, expected, msg):
+        if result:
+            result = [result[k]['stats'] for k in sorted(result)]
+            aaq_(pd.DataFrame(result),
+                 pd.DataFrame(expected),
+                 4,
+                 'Mismatch with URI: %s ' % msg)
+        else:
+            eq_([], expected, 'Mismatch with URI: %s ' % msg)
+
+
+    def test_stats(self):
+        for dataset in config['datasets']:
+            for uri in dataset['uris']:
+                data = Data(uri)
+                groups = dataset['types']['groups']
+                result = al.crosstabs(data, groups)
+                self.check_stats(result, dataset['crosstabs'], uri)
+            print('for %s on %s' % (dataset['table'], getengine(dataset['uris'])))
