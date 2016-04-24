@@ -272,7 +272,7 @@ def _crosstab(index, column, values=None, correction=False):
             'people': [90, 50, 40, 350],
         })
 
-        result = autolyse.crosstab(
+        result = autolyse._crosstab(
             index=data['city'],
             column=data['language'],
             values=data['people'])
@@ -305,7 +305,7 @@ def _crosstab(index, column, values=None, correction=False):
     Any value above 0.5 is a strong indication of a relationship. This says
     that ``language`` and ``city`` are dependent.
     '''
-    observed = pd.crosstab(index, column, values, aggfunc='sum').replace('', np.nan).fillna(0)
+    observed = pd.crosstab(index, column, values, aggfunc='sum').fillna(0)
     chi2, p, dof, expected_values = chi2_contingency(observed.values,
                                                      correction=correction)
     expected = pd.DataFrame(expected_values,
@@ -323,7 +323,10 @@ def _crosstab(index, column, values=None, correction=False):
     }
 
 
-def crosstabs(data, columns=None, values=None, correction=False, pairs_top=10000):
+def crosstabs(data, columns=None, values=None,
+              correction=False,
+              pairs_top=10000,
+              details=False):
     '''
     Identifies the strength of relationship between every pair of categorical
     columns in a DataFrame
@@ -345,6 +348,9 @@ def crosstabs(data, columns=None, values=None, correction=False, pairs_top=10000
         since Cramer's V (a more useful metric than chi-squared) must be computed
         without this correction.
     pairs_top: integer, Pick only top 10000 pairs by default
+    details: boolean
+        If True, will return observed and expected dataframes for pairs.
+        Defaults to False.
     '''
     if columns is None:
         columns = types(data)['groups']
@@ -352,17 +358,34 @@ def crosstabs(data, columns=None, values=None, correction=False, pairs_top=10000
     result = AttrDict()
     parameters = ('p', 'chi2', 'dof', 'V')
     for index, column in itertools.combinations(columns, 2):
-        agg_col = values if values in data.columns else column
+        agg_col = values if values in data.fields else column
         agg_func = bz.count(data[agg_col]) if agg_col == column else bz.sum(data[agg_col])
         data_grouped = bz.into(pd.DataFrame,
                                bz.by(bz.merge(data[index], data[column]),
-                                     values=agg_func).head(pairs_top))
+                                     values=agg_func)
+                               .sort('values')  # Generated SQL inefficient
+                               .head(pairs_top))
+        # BUG: bz.count: non-null count, gives 0 count for NULL groups
+        # .nrows needs to fixed blaze/issues/1484
+        # For now, we'll ignore NULL groups
+        # Remove NULL groups
+        data_grouped = data_grouped.dropna()
+        if data_grouped.empty:
+            result[(index, column)] = {}
+            continue
         r = _crosstab(data_grouped[index],
                       column=data_grouped[column],
                       values=data_grouped['values'],
                       correction=correction)
-        result[(index, column)] = {'observed': r['observed'],
-                                   'expected': r['expected'],
-                                   'stats': {param: r[param] for param in parameters}
-                                   }
+        if details:
+            result[(index, column)] = {
+                'observed': r['observed'],
+                'expected': r['expected'],
+                'stats': {param: r[param] for param in parameters}
+            }
+        else:
+            result[(index, column)] = {
+                'stats': {param: r[param] for param in parameters}
+            }
+
     return result
