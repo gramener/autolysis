@@ -1,31 +1,31 @@
-# Config file for automatic testing at travis-ci.org
-# This file will be regenerated if you run travis_pypi_setup.py
+# Set up a Python environment in Travis
+
+# Faster boot time using a container-based environment
+# https://docs.travis-ci.com/user/ci-environment/
+# sudo: False
+# Opt into fully virtualized infrastructure
+# cf http://blog.travis-ci.com/2015-03-31-docker-default-on-the-way/
+sudo: required
 
 language: python
 
-env:
-  - TOXENV=py35
-  - TOXENV=py34
-  - TOXENV=py33
-  - TOXENV=py27
-  - TOXENV=py26
-  - TOXENV=pypy
+matrix:
+  include:
+    - python: 2.7
+    - python: 3.4
+    - python: 3.5
 
-# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
-install: pip install -U tox
+addons:
+  postgresql: "9.3"
 
-# command to run tests, e.g. python setup.py test
-script: tox
+services:
+  - mysql
+  - postgresql
 
-# After you create the Github repo and add it to Travis, run the
-# travis_pypi_setup.py script to finish PyPI deployment setup
-deploy:
-  provider: pypi
-  distributions: sdist bdist_wheel
-  user: gramener
-  password:
-    secure: PLEASE_REPLACE_ME
-  on:
-    tags: true
-    repo: gramener/autolysis
-    condition: $TOXENV == py27
+install:
+  - source setup.sh
+  - setup_python
+  - create_databases
+
+script:
+  - make test

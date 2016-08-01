@@ -10,11 +10,11 @@ help:
 	@echo "clean-build - remove build artifacts"
 	@echo "clean-pyc - remove Python file artifacts"
 	@echo "clean-test - remove test and coverage artifacts"
-	@echo "drop-test - remove cached test datasets"
 	@echo "lint - check style with flake8"
 	@echo "test - run tests quickly with the default Python"
 	@echo "test-all - run tests on every Python version with tox"
 	@echo "coverage - check code coverage quickly with the default Python"
+	@echo "release-test - run all pre-release tests"
 	@echo "docs - generate Sphinx HTML documentation, including API docs"
 	@echo "release - package and upload a release"
 	@echo "dist - package"
@@ -40,17 +40,15 @@ clean-test:
 	rm -f .coverage
 	rm -fr htmlcov/
 
-drop-test:
-	$(PYTHON) setup.py nosetests -m"drop_test"
-
 lint:
 	flake8 autolysis tests
 
 test:
 	$(PYTHON) setup.py nosetests
 
+# Run all test cases, including with big data
 test-all:
-	tox
+	AUTOLYSIS_BIG=1 $(PYTHON) setup.py nosetests
 
 coverage:
 	$(PYTHON) -m coverage run --source autolysis setup.py nosetests
@@ -76,7 +74,7 @@ endif
 showdocs:
 	$(BROWSER) docs/_build/html/index.html
 
-release-test: clean-test lint docs test coverage
+release-test: clean-test lint docs test-all coverage
 
 release: clean
 	$(PYTHON) setup.py sdist upload

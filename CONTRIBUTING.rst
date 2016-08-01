@@ -22,10 +22,20 @@ Setup
   latest development version
 - Any other branches are temporary feature branches
 
-Autolysis runs on Python 2.7+ and Python 3.4+ in Windows and Linux.
+Autolysis runs on Python 2.7, 3.4 and 3.5 in Windows and Linux.
 To set up the development environment on Ubuntu, run this script::
 
-    source <(wget -qO- https://github.com/gramener/autolysis/issues/raw/master/setup-dev.sh)
+    sudo apt-get update
+    sudo apt-get install -y git make
+    git clone --branch=dev https://github.com/gramener/autolysis.git
+    # Or, if you want to commit into the repository and have access, use:
+    # git clone --branch=dev git@github.com:gramener/autolysis.git
+    cd autolysis
+    source setup.sh
+    install_databases
+    export TRAVIS_PYTHON_VERSION=2.7    # Change to 3.4 or 3.5 if you wish
+    setup_python
+    create_databases
 
 To manually set up the development environment, follow these steps.
 
@@ -131,5 +141,13 @@ When releasing a new version of Autolysis:
 
     git checkout master
     git merge dev
-    git tag -a v1.x.x           # Annotate with a one-line summary of features
+    git tag -a vx.x.x           # Annotate with a one-line summary of features
     git push --follow-tags
+
+5. To `release to PyPi`_, run::
+
+    make clean
+    python setup.py sdist bdist_wheel --universal
+    twine upload dist/*
+
+.. _release to PyPi: https://packaging.python.org/en/latest/distributing.html
