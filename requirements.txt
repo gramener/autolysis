@@ -7,3 +7,8 @@ setuptools >= 16.0          # 16.0 has good error message support
 six                         # Python 3 compatibility
 pathlib                     # Manipulate paths. Part of Python 3.3+
 orderedattrdict >= 1.4.2    # Treat ordered dict keys as attributes
+patool                      # For extracting archives for metadata
+XlsxWriter >= 0.9           # For metadata to read/write Excel files
+xlrd                        # For reading Excel data
+
+PyMySQL == 0.7.2            # PyMySQL 0.7.3 causes issues. Use last known working version

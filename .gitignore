@@ -3,7 +3,11 @@ docs/autolysis*.rst
 docs/modules.rst
 
 # Ignore test data files
-tests/data/
+*.csv
+*.sqlite3
+!tests/data/x.csv
+!tests/data/y.csv
+!tests/data/y.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

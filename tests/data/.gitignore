@@ -1,0 +1,13 @@
+# Ignore archive formats created by Makefile
+*.7z
+*.bz2
+*.db
+*.gz
+*.h5
+*.hdf5
+*.rar
+*.sqlite3
+*.tar
+*.xlsx
+*.xz
+*.zip

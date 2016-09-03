@@ -3,6 +3,10 @@
 # Autolysis setup script on Linux system. See this link for usage:
 # https://github.com/gramener/autolysis/blob/dev/CONTRIBUTING.rst
 
+command_exists() {
+  command -v "$@" > /dev/null 2>&1
+}
+
 install_databases() {
     echo "Installing PostgreSQL"
     sudo apt-get -y install postgresql postgresql-contrib
@@ -10,29 +14,38 @@ install_databases() {
     sudo DEBIAN_FRONTEND=noninteractive apt-get -y -q install mysql-server
 }
 
+install_packages() {
+    echo "Installing 7z, rar"
+    sudo apt-get install p7zip-full rar
+}
 
 setup_python() {
     # Install in $CONDAPATH, default to $HOME/miniconda
     export BASE=${CONDAPATH:-$HOME/miniconda}
-
-    # Get latest Miniconda, 64-bit
-    wget -qO miniconda.sh http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
-    bash miniconda.sh -b -p $BASE             # Install Conda
     export PATH="$BASE/bin:$PATH"             # Add Conda to path
+
+    if command_exists conda; then
+        echo "Using existing $(conda -V 2>&1)"
+    else
+        rm -rf $BASE                          # Delete conda dir to re-install
+        # Get latest Miniconda, 64-bit
+        wget -qO miniconda.sh http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh
+        bash miniconda.sh -b -p $BASE         # Install Conda
+        rm miniconda.sh                       # Remove miniconda setup
+        # Create a test environment called autolysis
+        conda create --yes --name autolysis-$TRAVIS_PYTHON_VERSION python=$TRAVIS_PYTHON_VERSION
+    fi
 
     conda config --set always_yes True        # Don't prompt user
     conda config --set changeps1 False        # Don't show (env) in command prompt after "activate <env>"
     conda config --add channels menpo         # Add channel to install pathlib
     conda update conda                        # Update Miniconda
 
-    # Create a test environment called autolysis
-    conda create -n autolysis-$TRAVIS_PYTHON_VERSION --file requirements-conda.txt python=$TRAVIS_PYTHON_VERSION
+    # Install requirements into autolysis environment
     source activate autolysis-$TRAVIS_PYTHON_VERSION
+    conda install --file requirements-conda.txt
     pip install -r requirements.txt
     pip install -r requirements-dev.txt
-
-    # Remove miniconda setup
-    rm miniconda.sh
 }
 
 create_databases() {
