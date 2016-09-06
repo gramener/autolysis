@@ -100,10 +100,9 @@ class TestMeta(unittest.TestCase):
             'rows': 2,
         }, m)
 
-        head = pd.DataFrame([[1, 2, '½', 4.0], [3, 4, None, None]],
-                            columns=['à', 'è', 'Unnamed: 2', '1'])
-        assert_frame_equal(m['head'], head)
-        assert_frame_equal(m['sample'], head)
+        data = pd.read_csv('x.csv', encoding='cp1252')
+        assert_frame_equal(m['head'], data)
+        assert_frame_equal(m['sample'], data)
 
         self.assertDictContainsSubset({
             'name': 'à',
