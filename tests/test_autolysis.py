@@ -126,10 +126,19 @@ class TestTypes(object):
 class TestGroupMeans(object):
     "Test autolysis.groupmeans"
     def check_gain(self, result, expected, msg):
-        if len(result.index):
-            # Ignoring type check, SQL might return Deciaml
-            aaq_(result.gain.sort_index().values.astype(float),
-                 expected,
+        gains = []
+        while True:
+            try:
+                item = next(result)
+                gains.append(item['gain'])
+            except StopIteration:
+                break
+        if len(gains):
+            # Ignoring type check, SQL might return Decimal
+            # TODO: Sorting & comparing might not be a good idea.
+            # Look for alternative comparison. create a series instead
+            aaq_([float(i) for i in sorted(gains)],
+                 sorted(expected),
                  4,
                  'Mismatch with URI: %s ' % msg)
         else:
@@ -161,14 +170,19 @@ class TestCrossTabs(object):
     "Test autolysis.crosstabs"
     def check_stats(self, result, expected, msg):
         if result:
-            result = [result[k]['stats'] for k in sorted(result)]
+            stats = {}
+            while True:
+                try:
+                    stats.update(next(result))
+                except StopIteration:
+                    break
+            result = [stats[k]['stats'] for k in sorted(stats)]
             aaq_(pd.DataFrame(result),
                  pd.DataFrame(expected),
                  4,
                  'Mismatch with URI: %s ' % msg)
         else:
             eq_([], expected, 'Mismatch with URI: %s ' % msg)
-
 
     def test_stats(self):
         for dataset in config['datasets']:
