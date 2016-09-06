@@ -35,7 +35,8 @@ def setUpModule():
         dataset['uris'] = [dataset['path']]
         if not os.path.exists(dataset['path']):
             logging.info('Downloading %s', dataset['table'])
-            pd.read_csv(dataset['url']).to_csv(dataset['path'], index=False)
+            pd.read_csv(dataset['url'], encoding='cp1252').to_csv(
+                dataset['path'], index=False, encoding='cp1252')
 
     # Create autolysis databases (sqlite3 data directory is DATA_DIR)
     os.chdir(DATA_DIR)
@@ -56,7 +57,7 @@ def setUpModule():
             # Don't load data if a non-empty table already exists
             target = dburl[db] + '::' + dataset['table']
             dataset['uris'].append(target)
-            engine = sa.create_engine(url)
+            engine = sa.create_engine(url, encoding='utf-8')
             if engine.dialect.has_table(engine.connect(), dataset['table']):
                 if Data(target).count() > 0:
                     continue

@@ -9,18 +9,16 @@ import itertools
 import numpy as np
 import blaze as bz
 import pandas as pd
+from io import open
 from scipy.stats.mstats import ttest_ind
 from scipy.stats import chi2_contingency
-from .metadata import Metadata
+from .meta import metadata
 __folder__ = os.path.split(os.path.abspath(__file__))[0]
 
 # Load autolysis.__version__ from release.json
-with open(os.path.join(__folder__, 'release.json')) as _release_file:
+with open(os.path.join(__folder__, 'release.json'), encoding='utf-8') as _release_file:
     release = json.load(_release_file)
     __version__ = release['version']
-
-# Convenience function that allows "from autolysis import meta"
-meta = Metadata()
 
 
 def is_date(series):
@@ -391,3 +389,13 @@ def crosstabs(data, columns=None, values=None,
                 }
 
         yield result
+
+
+__all__ = [
+    'is_date',
+    'has_keywords',
+    'types',
+    'groupmeans',
+    'crosstabs',
+    'metadata',
+]

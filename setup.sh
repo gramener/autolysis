@@ -15,7 +15,7 @@ install_databases() {
 }
 
 install_packages() {
-    echo "Installing 7z, rar"
+    echo "Installing 7zip, rar"
     sudo apt-get install p7zip-full rar
 }
 

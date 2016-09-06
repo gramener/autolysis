@@ -17,11 +17,11 @@ clean:
 # Rules to create all compression formats.
 # Note: --keep is not available on travis environment, so writing to stdout
 %.bz2: %
-	bzip2 --best --stdout $+ > $@
+	7z a -mx -y -tbzip2 $@ $+
 %.gz: %
-	gzip --best --stdout $+ > $@
+	7z a -mx -y -tgzip $@ $+
 %.xz: %
-	xz --best --stdout $+ > $@
+	7z a -mx -y -txz $@ $+
 
 # For each target in $(ARCHIVES) create the output
 xy.tar: $(BASE)

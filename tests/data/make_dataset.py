@@ -26,7 +26,7 @@ if __name__ == '__main__':
     if ext in {'.xls', '.xlsx'}:
         with pd.ExcelWriter(outfile) as writer:
             for key, df in datasets:
-                df.to_excel(writer, sheet_name=key)
+                df.to_excel(writer, sheet_name=key, encoding='cp1252')
 
     elif ext in {'.db', '.sqlite3'}:
         import sqlalchemy as sa

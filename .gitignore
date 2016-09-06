@@ -1,3 +1,6 @@
+# Ignore TODO files
+TODO
+
 # Ignore auto-generated documentation
 docs/autolysis*.rst
 docs/modules.rst

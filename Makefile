@@ -39,11 +39,13 @@ clean-test:
 	rm -fr .tox/
 	rm -f .coverage
 	rm -fr htmlcov/
+	cd tests/data && make clean
 
 lint:
 	flake8 autolysis tests
 
 test:
+	cd tests/data && make datasets
 	$(PYTHON) setup.py nosetests
 
 # Run all test cases, including with big data
