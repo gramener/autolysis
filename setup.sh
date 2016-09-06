@@ -16,7 +16,9 @@ install_databases() {
 
 install_packages() {
     echo "Installing 7zip, rar"
-    sudo apt-get install p7zip-full rar
+    sudo apt-add-repository multiverse
+    sudo apt-get update
+    sudo apt-get install p7zip-full p7zip-rar rar
 }
 
 setup_python() {
