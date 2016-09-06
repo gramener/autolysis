@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 from io import open
 # Require setuptools -- distutils does not support install_requires
 from setuptools import setup, find_packages
