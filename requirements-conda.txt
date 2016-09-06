@@ -1,4 +1,5 @@
 # Anaconda libraries (to be installed via conda)
 pandas >= 0.17              # Installs NumPy and python-dateutil
 scipy >= 0.16
-blaze >= 0.8
+blaze == 0.9.1
+odo == 0.4.2
