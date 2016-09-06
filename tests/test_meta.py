@@ -5,8 +5,10 @@ import os
 import shutil
 import unittest
 import subprocess
+import pandas as pd
 from nose.tools import eq_
 from autolysis import meta, metadata
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 
 
 class TestMeta(unittest.TestCase):
@@ -98,45 +100,40 @@ class TestMeta(unittest.TestCase):
             'rows': 2,
         }, m)
 
-        head = {
-            'columns': ['à', 'è', 'Unnamed: 2', '1'],
-            'index': [0, 1],
-            'data': [[1, 2, '½', 4.0], [3, 4, None, None]],
-        }
-        eq_(m['head'], head)
-        eq_(m['sample'], head)
+        head = pd.DataFrame([[1, 2, '½', 4.0], [3, 4, None, None]],
+                            columns=['à', 'è', 'Unnamed: 2', '1'])
+        assert_frame_equal(m['head'], head)
+        assert_frame_equal(m['sample'], head)
 
         self.assertDictContainsSubset({
             'name': 'à',
             'type_pandas': 'int64',
             'missing': 0,
             'nunique': 2,
-            'top': {'1': 1, '3': 1}
         }, m['columns']['à'])
-        eq_(m['columns']['à']['moments'], {
-            '25%': 1.5,
-            '50%': 2.0,
-            '75%': 2.5,
-            'count': 2.0,
-            'max': 3.0,
-            'mean': 2.0,
-            'min': 1.0,
-            'std': 1.4142135624
-        })
+        assert_series_equal(m['columns']['à']['top'],
+                            pd.Series([1, 1], index=[3, 1], name='à'))
+        assert_series_equal(
+            m['columns']['à']['moments'],
+            pd.Series(      [    2.0,    2.0, 1.4142135624,   1.0,   1.5,   2.0,   2.5,   3.0],
+                      index=['count', 'mean',        'std', 'min', '25%', '50%', '75%', 'max'],
+                      name='à'))
         self.assertDictContainsSubset({
             'name': 'è',
             'type_pandas': 'int64',
             'missing': 0,
             'nunique': 2,
-            'top': {'2': 1, '4': 1}
         }, m['columns']['è'])
+        assert_series_equal(m['columns']['è']['top'],
+                            pd.Series([1, 1], index=[2, 4], name='è'))
         self.assertDictContainsSubset({
             'name': 'Unnamed: 2',
             'type_pandas': 'object',
             'missing': 1,
             'nunique': 1,
-            'top': {'½': 1}
         }, m['columns']['Unnamed: 2'])
+        assert_series_equal(m['columns']['Unnamed: 2']['top'],
+                            pd.Series([1], index=['½'], name='Unnamed: 2'))
 
     def test_recursion(self):
         def children(sources, names):
