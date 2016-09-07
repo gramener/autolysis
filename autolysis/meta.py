@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 
 import io
 import os
+import sys
 import json
 import time
 import shutil
@@ -17,7 +18,6 @@ import requests
 import subprocess
 import pandas as pd
 import sqlalchemy as sa
-from tqdm import tqdm
 from hashlib import md5
 from six import text_type
 from functools import wraps
@@ -26,6 +26,18 @@ from orderedattrdict import AttrDict
 
 from six.moves.urllib_parse import urlparse
 from .config import DATA_DIR
+
+# tqdm imports colorama. colorama disables IPython TAB completion in Py2.
+# https://github.com/tartley/colorama/issues/92
+# Avoid importing tqdm in Py2 IPython
+try:
+    __IPYTHON__
+except NameError:
+    __IPYTHON__ = False
+if sys.version_info[0] == 2 and __IPYTHON__:
+    tqdm = lambda x, *args, **kwargs: x
+else:
+    from tqdm import tqdm
 
 OK = 200                    # HTTP status code
 seconds_per_day = 86400     # Number of seconds in a day
