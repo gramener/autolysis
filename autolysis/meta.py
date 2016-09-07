@@ -18,6 +18,7 @@ import requests
 import subprocess
 import pandas as pd
 import sqlalchemy as sa
+from copy import copy
 from hashlib import md5
 from six import text_type
 from functools import wraps
@@ -168,9 +169,9 @@ def metadata_file(path, root, tables=None):
                     ('command', [format, path, table])
                 ])
     elif format == 'csv':
-        tree.command = ['csv', path]
+        tree['command'] = ['csv', path]
     elif format == 'json':
-        tree.command = ['json', path]
+        tree['command'] = ['json', path]
     return tree
 
 
@@ -393,18 +394,24 @@ class MetaDict(AttrDict):
             p.break_()
         p.text(lines[-1])
 
-    def to_json(self, **kwargs):
+    def to_json(self, drop={'command', 'head', 'sample'}, **kwargs):
+        # Create a copy and remove keys that need not be exported
+        meta = copy(self)
+        for key in list(meta):
+            if key in drop:
+                meta.pop(key)
+        # Set default JSON export properties and export as JSON
         import json
         kwargs.setdefault('cls', PandasEncoder)
         kwargs.setdefault('indent', 4)
-        return json.dumps(self, **kwargs)
+        return json.dumps(meta, **kwargs)
 
     def to_yaml(self, **kwargs):
         import yaml
         import orderedattrdict.yamlutils            # noqa. Imported to preserve order in YAML
         kwargs.setdefault('default_flow_style', False)
         data = json.loads(self.to_json(indent=0), object_pairs_hook=AttrDict)
-        return yaml.dump(data, **kwargs)
+        return yaml.safe_dump(data, **kwargs)
 
 
 class Meta(MetaDict):
