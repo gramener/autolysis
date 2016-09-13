@@ -523,9 +523,9 @@ def chunked(method, chunksize):
     @wraps(method)
     def wrapped(*args, **kwargs):
         kwargs['chunksize'] = chunksize
-        result = method(*args, **kwargs)
-        return next(result)
-    return method
+        for result in method(*args, **kwargs):
+            return result
+    return wrapped
 
 
 _preview_command = {
