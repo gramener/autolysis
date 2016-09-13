@@ -103,16 +103,28 @@ def metadata_sql(source, tables=None):
         engine = sa.create_engine(source)       # noqa: encoding kills Py2.7
     except sa.exc.ArgumentError:
         raise NotImplementedError('Cannot process source %s' % source)
-    if tables is None:
-        inspector = sa.inspect(engine)
-        tables = inspector.get_table_names()
-    tree = Meta(datasets=Datasets())
-    for table in tables:
-        tree.datasets[table] = Meta([
-            ('name', table),
-            ('format', 'table'),
-            ('command', ['sql', table, source]),
-        ])
+    # Get a list of database source URLs
+    inspector = sa.inspect(engine)
+    if not engine.url.database:
+        source = source.rstrip('/') + '/'
+        tree = Meta(datasets=Datasets())
+        for schema in inspector.get_schema_names():
+            subtree = tree.datasets[schema] = Meta(name=schema, format='sql', datasets=Datasets())
+            # Special case: For PostgreSQL, treat 'public' as ''
+            if schema == 'public' and engine.url.drivername.startswith('postgresql'):
+                schema = None
+            for table in (tables or inspector.get_table_names(schema)):
+                subtree.datasets[table] = Meta([
+                    ('name', table), ('format', 'table'),
+                    ('command', ['sql', table, source + (schema or '')]),
+                ])
+    else:
+        tree = Meta(datasets=Datasets())
+        for table in (tables or inspector.get_table_names()):
+            tree.datasets[table] = Meta([
+                ('name', table), ('format', 'table'),
+                ('command', ['sql', table, source]),
+            ])
     return tree
 
 
