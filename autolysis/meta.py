@@ -392,7 +392,11 @@ class MetaDict(AttrDict):
         import orderedattrdict.yamlutils            # noqa. Imported to preserve order in YAML
         kwargs.setdefault('default_flow_style', False)
         data = json.loads(self.to_json(indent=0), object_pairs_hook=AttrDict)
-        return yaml.dump(data, **kwargs)
+        return yaml.safe_dump(data, **kwargs)
+
+    def to_markdown(self, **kwargs):
+        '''Return a hierarchical list of datasets and column names'''
+        pass
 
 
 class Meta(MetaDict):
