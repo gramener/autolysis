@@ -36,7 +36,8 @@ try:
 except NameError:
     __IPYTHON__ = False
 if sys.version_info[0] == 2 and __IPYTHON__:
-    tqdm = lambda x, *args, **kwargs: x
+    def tqdm(x, *args, **kwargs):
+        return x
 else:
     from tqdm import tqdm
 
@@ -168,10 +169,8 @@ def metadata_file(path, root, tables=None):
                     ('format', 'table'),
                     ('command', [format, path, table])
                 ])
-    elif format == 'csv':
-        tree['command'] = ['csv', path]
-    elif format == 'json':
-        tree['command'] = ['json', path]
+    elif format in {'csv', 'json', 'dta'}:
+        tree['command'] = [format, path]
     return tree
 
 
@@ -334,6 +333,12 @@ def guess_format(path, ignore_ext=False):
         return 'xls'
     if head.startswith(b'\x89\x48\x44\x46\x0d\x0a\x1a\x0a'):
         return 'hdf5'
+    # http://www.stata.com/help.cgi?dta_115 and ?dta_118
+    if head.startswith(b'<stata_dta>'):
+        return 'dta'
+    if (b'\x71' <= head[0:1] <= b'\x73' and head[1:2] in {b'\x01', b'\x02'}
+            and head[2:4] == b'\x01\x00'):
+        return 'dta'
     try:
         read_json(path)
         return 'json'
@@ -429,8 +434,8 @@ class Meta(MetaDict):
             if rows:
                 result += ['    ' + data for data in self.datasets.__str__(rows, deep).split('\n')]
         elif 'rows' in self and 'columns' in self:
-            result.append('{:s} ({:s}) {:d} rows {:d} cols'.format(
-                name, format, self.rows, len(self.columns)))
+            result.append('{:s} ({:s}) {:,d}{:s} rows {:,d} cols'.format(
+                name, format, self.rows, '+' if self.rows == MAX_ROWS else '', len(self.columns)))
             if rows:
                 result += ['    ' + col for col in self.columns.__str__(rows, deep).split('\n')]
         else:
@@ -527,21 +532,30 @@ def chunked(method, chunksize):
     @wraps(method)
     def wrapped(*args, **kwargs):
         kwargs['chunksize'] = chunksize
-        for result in method(*args, **kwargs):
-            return result
+        try:
+            for result in method(*args, **kwargs):
+                return result
+        # pd.read_hdf5 raises a TypeError on fixed format files since it cannot
+        # read them as an iterator. Load them fully instead
+        except TypeError:
+            del kwargs['chunksize']
+            return method(*args, **kwargs)
     return wrapped
 
 
+MAX_ROWS = 10000
 _preview_command = {
-    'csv': chunked(read_csv_encoded, 10000),
+    'csv': chunked(read_csv_encoded, MAX_ROWS),
+    'dta': chunked(pd.read_stata, MAX_ROWS),
     'json': read_json,
-    'sql': chunked(pd.read_sql_table, 10000),
+    'sql': chunked(pd.read_sql_table, MAX_ROWS),
     'xlsx': pd.read_excel,
-    'hdf5': chunked(pd.read_hdf, 10000),
+    'hdf5': chunked(pd.read_hdf, MAX_ROWS),
 }
 
 _read_command = {
     'csv': read_csv_encoded,
+    'dta': pd.read_stata,
     'json': read_json,
     'sql': pd.read_sql_table,
     'xlsx': pd.read_excel,

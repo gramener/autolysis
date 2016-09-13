@@ -10,6 +10,8 @@ from nose.tools import eq_
 from autolysis import meta, metadata
 from pandas.util.testing import assert_frame_equal, assert_series_equal
 
+BASE = {'x.csv', 'y.csv', 'z.json', 'x.dta'}
+
 
 class TestMeta(unittest.TestCase):
 
@@ -25,8 +27,7 @@ class TestMeta(unittest.TestCase):
         os.mkdir(cls.root)
         subprocess.check_output(['make'])
 
-        files = [
-            'x.csv', 'y.csv', 'z.json',                 # BASE
+        files = list(BASE) + [
             'x.csv.xz', 'x.csv.gz', 'x.csv.bz2',        # COMPRESSED
             'y.csv.xz', 'y.csv.gz', 'y.csv.bz2',
             'xy.zip', 'xy.7z', 'xy.rar', 'xy.tar',      # ARCHIVES
@@ -59,6 +60,7 @@ class TestMeta(unittest.TestCase):
         formats = [
             ('x.csv', 'csv'),
             ('z.json', 'json'),
+            ('x.dta', 'dta'),
             ('x.csv.xz', 'xz'),
             ('x.csv.gz', 'gz'),
             ('x.csv.bz2', 'bz2'),
@@ -79,7 +81,7 @@ class TestMeta(unittest.TestCase):
 
     def test_extract_archive(self):
         mapping = [
-            ({'xy.zip', 'xy.7z', 'xy.rar', 'xy.tar'}, {'x.csv', 'y.csv', 'z.json'}),
+            ({'xy.zip', 'xy.7z', 'xy.rar', 'xy.tar'}, BASE),
             ({'x.csv.xz', 'x.csv.gz', 'x.csv.bz2'}, {'x.csv'}),
             ({'xy.tar.xz', 'xy.tar.gz', 'xy.tar.bz2'}, {'xy.tar'}),
         ]
@@ -138,10 +140,10 @@ class TestMeta(unittest.TestCase):
         def children(sources, names):
             for source in sources:
                 datasets = self.result[source].get('datasets', {})
-                eq_(set(datasets.keys()), set(names))
+                eq_(set(datasets.keys()), names)
                 # TODO: check if dataset contents are equal
 
-        children(['x.csv', 'y.csv', 'z.json'], [])
-        children(['x.csv.xz', 'x.csv.gz', 'x.csv.bz2'], ['x.csv'])
-        children(['y.csv.xz', 'y.csv.gz', 'y.csv.bz2'], ['y.csv'])
-        children(['xy.zip', 'xy.7z', 'xy.rar', 'xy.tar'], ['x.csv', 'y.csv', 'z.json'])
+        children(BASE, set())
+        children({'x.csv.xz', 'x.csv.gz', 'x.csv.bz2'}, {'x.csv'})
+        children({'y.csv.xz', 'y.csv.gz', 'y.csv.bz2'}, {'y.csv'})
+        children({'xy.zip', 'xy.7z', 'xy.rar', 'xy.tar'}, BASE)

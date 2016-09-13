@@ -8,6 +8,7 @@ docs/modules.rst
 # Ignore test data files
 *.csv
 *.sqlite3
+*.dta
 !tests/data/x.csv
 !tests/data/y.csv
 !tests/data/y.csv
