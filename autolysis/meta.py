@@ -413,9 +413,13 @@ class MetaDict(AttrDict):
         data = json.loads(self.to_json(indent=0), object_pairs_hook=AttrDict)
         return yaml.safe_dump(data, **kwargs)
 
+    def to_text(self, rows=100):
+        '''Return a hierarchical list of datasets and column names'''
+        return self.__str__(rows=100, deep=True)
+
 
 class Meta(MetaDict):
-    def __str__(self, rows=100):
+    def __str__(self, rows=100, deep=False):
         name = self.get('name', self.get('source', ''))
         format = self.get('format', 'format?')
         result = []
@@ -423,12 +427,12 @@ class Meta(MetaDict):
             result.append('{:s} ({:s}) {:d} datasets'.format(
                 name, format, len(self.datasets)))
             if rows:
-                result += ['    ' + data for data in self.datasets.__str__(rows=rows).split('\n')]
+                result += ['    ' + data for data in self.datasets.__str__(rows, deep).split('\n')]
         elif 'rows' in self and 'columns' in self:
             result.append('{:s} ({:s}) {:d} rows {:d} cols'.format(
                 name, format, self.rows, len(self.columns)))
             if rows:
-                result += ['    ' + col for col in self.columns.__str__(rows=rows).split('\n')]
+                result += ['    ' + col for col in self.columns.__str__(rows, deep).split('\n')]
         else:
             result.append('{:s} ({:s}). No datasets/rows detected'.format(
                 name, format))
@@ -447,27 +451,27 @@ class Meta(MetaDict):
 
 
 class Datasets(MetaDict):
-    def __str__(self, rows=100):
+    def __str__(self, rows=100, deep=False):
         result = []
         for dataset in islice(self.values(), rows):
-            result.append(dataset.__str__(rows=0))
+            result.append(dataset.__str__(rows=rows if deep else 0, deep=deep))
         if len(self) > rows:
             result.append('...')
         return '\n'.join(result)
 
 
 class Columns(MetaDict):
-    def __str__(self, rows=100):
+    def __str__(self, rows=100, deep=False):
         result = []
         for col in islice(self.values(), rows):
-            result.append(col.__str__(rows=0))
+            result.append(col.__str__(rows=rows if deep else 0, deep=deep))
         if len(self) > rows:
             result.append('...')
         return '\n'.join(result)
 
 
 class Column(MetaDict):
-    def __str__(self, rows=100):
+    def __str__(self, rows=100, deep=False):
         '''
         Display a column as follows::
 
