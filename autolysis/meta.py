@@ -76,7 +76,7 @@ def metadata(source, tables=None, root=None, merge=True, **kwargs):
                 data = _preview_command[cmd[0]](*cmd[1:])
                 node.update(metadata_frame(data, **kwargs))
             except Exception as e:
-                node['error'] = str(e)
+                node['error'] = text_type(e)
                 logging.exception('Unable to load %s', ':'.join(cmd[1:]))
 
     # Merge column metadata of common datasets
@@ -151,7 +151,7 @@ def metadata_file(path, root, tables=None):
                 try:
                     submeta.update(metadata_file(source, root, tables))
                 except Exception as e:
-                    submeta['error'] = str(e)
+                    submeta['error'] = text_type(e)
                     logging.exception('Unable to get metadata for %s', source)
     elif format in {'7z', 'zip', 'rar', 'tar', 'xz', 'gz', 'bz2'}:
         tree.datasets = Datasets()
@@ -160,7 +160,7 @@ def metadata_file(path, root, tables=None):
             try:
                 submeta.update(metadata_file(source, root, tables))
             except Exception as e:
-                submeta['error'] = str(e)
+                submeta['error'] = text_type(e)
                 logging.exception('Unable to get metadata for %s', source)
     elif format == 'sqlite3':
         tree.update(metadata_sql('sqlite:///' + path, tables))
@@ -365,24 +365,27 @@ def guess_format(path, ignore_ext=False):
         pass
 
 
-def read_csv_encoded(*args, **kwargs):
+def read_encoded(method):
     '''
     Read a CSV file via Pandas ``read_csv`` with different encodings. By default,
     try CP-1252 and then UTF-8. Set ``encodings=('encoding', ...)`` to change the
     list of encodings to try.
     '''
-    for encoding in kwargs.pop('encodings', ('cp1252', 'utf-8', 'utf-16-le', 'utf-16-be')):
-        try:
-            kwargs['encoding'] = encoding
-            result = pd.read_csv(*args, **kwargs)
-            if 'chunksize' in kwargs:
-                peek = next(result)
-                return chain([peek], result)
-            else:
-                return result
-        except Exception:
-            pass
-    raise CSVEncodingError()
+    def wrapped(*args, **kwargs):
+        for encoding in kwargs.pop('encodings', ('cp1252', 'utf-8', 'utf-16-le', 'utf-16-be')):
+            try:
+                kwargs['encoding'] = encoding
+                result = method(*args, **kwargs)
+                if 'chunksize' in kwargs:
+                    peek = next(result)
+                    return chain([peek], result)
+                else:
+                    return result
+            except Exception as e:
+                pass
+        raise e
+
+    return wrapped
 
 
 def read_json(*args, **kwargs):
@@ -405,7 +408,7 @@ class MetaDict(AttrDict):
     '''
     def _repr_pretty_(self, p, cycle):
         '''Printing the object in IPython prints str(object)'''
-        lines = str(self).split('\n')
+        lines = self.__str__().split('\n')
         for line in lines[:-1]:
             p.text(line)
             p.break_()
@@ -535,10 +538,6 @@ class PandasEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class CSVEncodingError(UnicodeError):
-    pass
-
-
 def chunked(method, chunksize):
     '''Wrap Pandas read_* methods with a specified chunksize and returns the first chunk'''
     @wraps(method)
@@ -556,9 +555,11 @@ def chunked(method, chunksize):
 
 
 MAX_ROWS = 10000
+read_csv_encoded = read_encoded(pd.read_csv)
+read_stata_encoded = read_encoded(pd.read_stata)
 _preview_command = {
     'csv': chunked(read_csv_encoded, MAX_ROWS),
-    'dta': chunked(pd.read_stata, MAX_ROWS),
+    'dta': chunked(read_stata_encoded, MAX_ROWS),
     'json': read_json,
     'sql': chunked(pd.read_sql_table, MAX_ROWS),
     'xlsx': pd.read_excel,
@@ -567,7 +568,7 @@ _preview_command = {
 
 _read_command = {
     'csv': read_csv_encoded,
-    'dta': pd.read_stata,
+    'dta': read_stata_encoded,
     'json': read_json,
     'sql': pd.read_sql_table,
     'xlsx': pd.read_excel,

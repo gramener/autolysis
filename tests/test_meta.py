@@ -147,3 +147,8 @@ class TestMeta(unittest.TestCase):
         children({'x.csv.xz', 'x.csv.gz', 'x.csv.bz2'}, {'x.csv'})
         children({'y.csv.xz', 'y.csv.gz', 'y.csv.bz2'}, {'y.csv'})
         children({'xy.zip', 'xy.7z', 'xy.rar', 'xy.tar'}, BASE)
+
+    def test_output(self):
+        for key in self.result:
+            for method in ['json', 'yaml', 'text']:
+                getattr(self.result[key], 'to_' + method)()
