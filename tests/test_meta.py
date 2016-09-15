@@ -150,5 +150,5 @@ class TestMeta(unittest.TestCase):
 
     def test_output(self):
         for key in self.result:
-            for method in ['json', 'yaml', 'text']:
+            for method in ['json', 'yaml', 'text', 'markdown', 'dict']:
                 getattr(self.result[key], 'to_' + method)()

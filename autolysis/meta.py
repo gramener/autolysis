@@ -415,6 +415,7 @@ class MetaDict(AttrDict):
         p.text(lines[-1])
 
     def to_json(self, drop={'command', 'head', 'sample'}, **kwargs):
+        '''Return an ordered JSON string containing the metadata'''
         # Create a copy and remove keys that need not be exported
         meta = copy(self)
         for key in list(meta):
@@ -426,7 +427,12 @@ class MetaDict(AttrDict):
         kwargs.setdefault('indent', 4)
         return json.dumps(meta, **kwargs)
 
+    def to_dict(self):
+        '''Return a plain dict version of the metadata'''
+        return json.loads(self.to_json(indent=0))
+
     def to_yaml(self, **kwargs):
+        '''Return a YAML string containing the metadata'''
         import yaml
         import orderedattrdict.yamlutils            # noqa. Imported to preserve order in YAML
         kwargs.setdefault('default_flow_style', False)
@@ -434,28 +440,58 @@ class MetaDict(AttrDict):
         return yaml.safe_dump(data, **kwargs)
 
     def to_text(self, rows=100):
-        '''Return a hierarchical list of datasets and column names'''
+        '''Return a hierarchical text list of datasets and column names'''
         return self.__str__(rows=100, deep=True)
+
+    def to_markdown(self):
+        '''Return a Markdown list of lists of datasets and column names'''
+        return self.__str__(rows=100, deep=True, template='markdown')
+
+
+_templates = {
+    'text': {
+        'datasets': '{name:s} ({fmt:s}) {size:d} datasets',
+        'dataset': '{name:s} ({fmt:s}) {rows:,d}{more:s} rows {cols:,d} cols',
+        'no-dataset': '{name:s} ({format:s}). No datasets/rows detected',
+        'more': '...',
+        'section': '{name:s}:',
+        'attr': '{key:s}: {val:s}',
+        'column': '{name:s} ({type:s}): {top:s}',
+    },
+    'markdown': {
+        'datasets': '- **{name:s}** ({fmt:s}) {size:d} datasets',
+        'dataset': '- **{name:s}** ({fmt:s}) {rows:,d}{more:s} rows {cols:,d} cols',
+        'no-dataset': '- **{name:s}** ({format:s}). No datasets/rows detected',
+        'more': '- ...',
+        'section': '- **{name:s}**:',
+        'attr': '- *{key:}*: {val:s}',
+        'column': '- **{name:s}** ({type:s}): {top:s}',
+    },
+}
 
 
 class Meta(MetaDict):
-    def __str__(self, rows=100, deep=False):
+    def __str__(self, rows=100, deep=False, template=None):
+        tmpl = _templates.get(template, _templates['text'])
         name = self.get('name', self.get('source', ''))
         format = self.get('format', 'format?')
         result = []
         if 'datasets' in self:
-            result.append('{:s} ({:s}) {:d} datasets'.format(
-                name, format, len(self.datasets)))
+            result.append(tmpl['datasets'].format(name=name, fmt=format, size=len(self.datasets)))
             if rows:
-                result += ['    ' + data for data in self.datasets.__str__(rows, deep).split('\n')]
+                result += ['    ' + data
+                           for data in self.datasets.__str__(rows, deep, template).split('\n')]
         elif 'rows' in self and 'columns' in self:
-            result.append('{:s} ({:s}) {:,d}{:s} rows {:,d} cols'.format(
-                name, format, self.rows, '+' if self.rows == MAX_ROWS else '', len(self.columns)))
+            result.append(tmpl['dataset'].format(
+                name=name, fmt=format,
+                rows=self.rows,
+                more='+' if self.rows == MAX_ROWS else '',
+                cols=len(self.columns)))
             if rows:
-                result += ['    ' + col for col in self.columns.__str__(rows, deep).split('\n')]
+                result += ['    ' +
+                           col for col in self.columns.__str__(rows, deep, template).split('\n')]
         else:
-            result.append('{:s} ({:s}). No datasets/rows detected'.format(
-                name, format))
+            result.append(tmpl['no-dataset'].format(name=name, fmt=format))
         return '\n'.join(result)
 
     def data(self):
@@ -470,28 +506,31 @@ class Meta(MetaDict):
         pass
 
 
-class Datasets(MetaDict):
-    def __str__(self, rows=100, deep=False):
+class CollectionMixin(object):
+    def __str__(self, rows=100, deep=False, template=None):
+        tmpl = _templates.get(template, _templates['text'])
         result = []
-        for dataset in islice(self.values(), rows):
-            result.append(dataset.__str__(rows=rows if deep else 0, deep=deep))
+        indent = '    ' if deep and self._show_name else ''
+        for name, col in islice(self.items(), rows):
+            if deep and self._show_name:
+                result.append(tmpl['section'].format(name=name))
+            lines = col.__str__(rows if deep else 0, deep, template)
+            result += [indent + line for line in lines.split('\n')]
         if len(self) > rows:
-            result.append('...')
+            result.append(tmpl['more'])
         return '\n'.join(result)
 
 
-class Columns(MetaDict):
-    def __str__(self, rows=100, deep=False):
-        result = []
-        for col in islice(self.values(), rows):
-            result.append(col.__str__(rows=rows if deep else 0, deep=deep))
-        if len(self) > rows:
-            result.append('...')
-        return '\n'.join(result)
+class Datasets(MetaDict, CollectionMixin):
+    _show_name = False
+
+
+class Columns(MetaDict, CollectionMixin):
+    _show_name = True
 
 
 class Column(MetaDict):
-    def __str__(self, rows=100, deep=False):
+    def __str__(self, rows=100, deep=False, template=None):
         '''
         Display a column as follows::
 
@@ -504,28 +543,35 @@ class Column(MetaDict):
                 second:  95
                  third:   1
         '''
+        tmpl = _templates.get(template, _templates['text'])
         if rows > 0:
             result = []
             for key in ['name', 'type_pandas', 'missing', 'nunique']:
                 if key in self:
-                    result.append('%s: %s' % (key, self[key]))
+                    result.append(tmpl['attr'].format(key=key, val=text_type(self[key])))
             for section, dtype in [('top', 'int'), ('moments', 'float')]:
                 if section in self:
-                    result.append('%s:' % section)
-                    if dtype == 'int':
-                        fmt = '%{:d}d'.format(len('%d' % max(self[section].values)))
-                    elif dtype == 'float':
-                        fmt = '%{:d}.2f'.format(len('%.2f' % max(self[section].values)))
+                    result.append(tmpl['section'].format(name=section))
+                    if template == 'text':
+                        max_val = max(self[section].values)
+                        fmt_key = '{:>%ds}' % max(len('%s' % key) for key in self[section].index)
                     else:
-                        fmt = '%s'
-                    keylength = max(len('%s' % key) for key in self[section].index)
-                    tmpl = '    %{:d}s: {:s}'.format(keylength, fmt)
-                    for key, value in self[section].iteritems():
-                        result.append(tmpl % (key, value))
+                        max_val = 0
+                        fmt_key = '{:s}'
+                    if dtype == 'int':
+                        fmt_val = '{:%dd}' % len('{:d}'.format(max_val))
+                    elif dtype == 'float':
+                        fmt_val = '{:%d.2f}' % len('{:.2f}'.format(max_val))
+                    else:
+                        fmt_val = '{:r}'
+                    fmt_key, fmt_val = fmt_key.format, fmt_val.format
+                    for key, val in self[section].iteritems():
+                        result.append('    ' + tmpl['attr'].format(
+                            key=fmt_key(text_type(key)), val=fmt_val(val)))
             return '\n'.join(result[:rows])
         else:
             top = ', '.join('%s' % val for val in self.top.keys())
-            return '%s (%s): %s' % (self.name, self.type_pandas, top)
+            return tmpl['column'].format(name=self.name, type=self.type_pandas, top=top)
 
 
 class PandasEncoder(json.JSONEncoder):
