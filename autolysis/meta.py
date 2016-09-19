@@ -43,6 +43,7 @@ else:
 
 OK = 200                    # HTTP status code
 seconds_per_day = 86400     # Number of seconds in a day
+expiry_days = 1             # Number of days after which URLs expiry
 
 
 def metadata(source, tables=None, root=None, merge=True, **kwargs):
@@ -88,7 +89,7 @@ def metadata(source, tables=None, root=None, merge=True, **kwargs):
                     if 'columns' in data:
                         sign = tuple(col.name for col in data.columns.values())
                         if sign in sign_lookup:
-                            data.columns = AttrDict(see=sign_lookup[sign].name)
+                            data.columns = Column(see=sign_lookup[sign].name)
                         else:
                             sign_lookup[sign] = data
 
@@ -289,13 +290,13 @@ def filename(url, root, path=None):
     return os.path.abspath(os.path.join(root, filename))
 
 
-def fetch(url, path, expiry_days=1):
+def fetch(url, path):
     '''
     Retrieves the HTTP or FTP url and saves it into path, unless path is newer than expiry_days.
     Returns the path
     '''
     now = time.time()
-    if os.path.exists(path) and os.stat(path.st_mtime) > now - expiry_days * seconds_per_day:
+    if os.path.exists(path) and os.stat(path).st_mtime > now - expiry_days * seconds_per_day:
         return path
     r = requests.get(url)
     if r.status_code == OK and len(r.content):
@@ -310,10 +311,9 @@ def guess_format(path, ignore_ext=False):
     File signatures / magic are from http://www.garykessler.net/library/file_sigs.html
     '''
     base, ext = os.path.splitext(path)
-    ext = ext.lower()
-    if ext and not ignore_ext:
-        ext = ext[1:]
-        return _ext_map.get(ext, ext)
+    ext = ext.lower()[1:]
+    if ext and ext in _ext_map and not ignore_ext:
+        return _ext_map[ext]
 
     # Guess based on signature
     if os.path.isdir(path):     # Directories are allowed, and have a 'dir' format
@@ -452,7 +452,7 @@ _templates = {
     'text': {
         'datasets': '{name:s} ({fmt:s}) {size:d} datasets',
         'dataset': '{name:s} ({fmt:s}) {rows:,d}{more:s} rows {cols:,d} cols',
-        'no-dataset': '{name:s} ({format:s}). No datasets/rows detected',
+        'no-dataset': '{name:s} ({fmt:s}). No datasets/rows detected',
         'more': '...',
         'section': '{name:s}:',
         'attr': '{key:s}: {val:s}',
@@ -461,7 +461,7 @@ _templates = {
     'markdown': {
         'datasets': '- **{name:s}** ({fmt:s}) {size:d} datasets',
         'dataset': '- **{name:s}** ({fmt:s}) {rows:,d}{more:s} rows {cols:,d} cols',
-        'no-dataset': '- **{name:s}** ({format:s}). No datasets/rows detected',
+        'no-dataset': '- **{name:s}** ({fmt:s}). No datasets/rows detected',
         'more': '- ...',
         'section': '- **{name:s}**:',
         'attr': '- *{key:}*: {val:s}',
@@ -621,10 +621,25 @@ _read_command = {
     'hdf5': pd.read_hdf,
 }
 
+# List of known extensions and the types they map to
 _ext_map = {
+    '7z': '7z',
     '7zip': '7z',
+    'bz2': 'bz2',
+    'csv': 'csv',
     'db': 'sqlite3',
+    'dta': 'dta',
+    'gz': 'gz',
     'h5': 'hdf5',
+    'hdf5': 'hdf5',
+    'json': 'json',
+    'rar': 'rar',
+    'sqlite3': 'sqlite3',
+    'tar': 'tar',
+    'xls': 'xls',
+    'xlsx': 'xlsx',
+    'xz': 'xz',
+    'zip': 'zip',
 }
 
 _format_map = {

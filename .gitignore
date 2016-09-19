@@ -9,6 +9,8 @@ docs/modules.rst
 *.csv
 *.sqlite3
 *.dta
+na.ext
+y.data
 !tests/data/x.csv
 !tests/data/y.csv
 !tests/data/y.csv

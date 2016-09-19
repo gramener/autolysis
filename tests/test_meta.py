@@ -10,7 +10,7 @@ from nose.tools import eq_
 from autolysis import meta, metadata
 from pandas.util.testing import assert_frame_equal, assert_series_equal
 
-BASE = {'x.csv', 'y.csv', 'z.json', 'x.dta'}
+BASE = {'x.csv', 'y.csv', 'z.json', 'x.dta', 'na.ext', 'y.data'}
 
 
 class TestMeta(unittest.TestCase):
@@ -74,7 +74,7 @@ class TestMeta(unittest.TestCase):
         ]
         for path, fmt in formats:
             eq_(meta.guess_format(path), fmt)
-            eq_(meta.guess_format(path, True), fmt)
+            eq_(meta.guess_format(path, ignore_ext=True), fmt)
 
     def test_read_csv_encoded(self):
         raise unittest.SkipTest('To be implemented')

@@ -1,6 +1,6 @@
 # This Makefile needs bzip2, gzip, xz, 7z, tar, rar and python
 
-BASE = x.csv y.csv z.json x.dta
+BASE = x.csv y.csv z.json x.dta na.ext y.data
 COMPRESSED = x.csv.xz x.csv.gz x.csv.bz2 \
  			 y.csv.xz y.csv.gz y.csv.bz2
 ARCHIVES = xy.zip xy.7z xy.rar xy.tar
@@ -24,6 +24,10 @@ clean:
 	7z a -mx -y -txz $@ $+
 %.dta: %.csv
 	python make_dataset.py $@ $+
+na.ext:
+	echo "This is not a data file" > $@
+y.data: y.csv
+	cp $+ $@
 
 # For each target in $(ARCHIVES) create the output
 xy.tar: $(BASE)
