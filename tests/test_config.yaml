@@ -24,18 +24,18 @@ datasets:
         databases: [postgres, mysql, sqlite]
         types:
             dates: []
-            groups: [age.group, method, method2, sex]
+            groups: [age.group, method2, method, sex]
             keywords: []
             numbers: [age, Freq]
         groupmeans:
             gain: [0.4942, 0.6000, 2.4484, 2.4484, 0.2718]
         crosstabs: [
-             {V: 0.0, chi2: 0.0, dof: 32, p: 1.0},
-             {V: 0.0, chi2: 0.0, dof: 28, p: 1.0},
-             {V: 0.0, chi2: 0.0, dof: 4, p: 1.0},
-             {V: 1.0, chi2: 2142.0, dof: 56, p: 0.0},
-             {V: 0.0, chi2: 0.0, dof: 8, p: 1.0},
-             {V: 0.0, chi2: 0.0, dof: 7, p: 1.0}]
+             {index: age.group, column: method, stats: {V: 0.0, chi2: 0.0, dof: 32, p: 1.0}},
+             {index: age.group, column: method2, stats: {V: 0.0, chi2: 0.0, dof: 28, p: 1.0}},
+             {index: age.group, column: sex, stats: {V: 0.0, chi2: 0.0, dof: 4, p: 1.0}},
+             {index: method2, column: method, stats: {V: 1.0, chi2: 2142.0, dof: 56, p: 0.0}},
+             {index: method, column: sex, stats: {V: 0.0, chi2: 0.0, dof: 8, p: 1.0}},
+             {index: method2, column: sex, stats: {V: 0.0, chi2: 0.0, dof: 7, p: 1.0}}]
     -
         url: https://data.gov.in/sites/default/files/all_india_PO_list_without_APS_offices_ver2.csv
         big: True

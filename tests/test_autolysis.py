@@ -169,27 +169,25 @@ class TestGroupMeans(object):
 
 class TestCrossTabs(object):
     "Test autolysis.crosstabs"
-    def check_stats(self, result, expected, msg):
+    def check_stats(self, result, exp, msg):
         if result:
-            stats = {}
             while True:
                 try:
-                    stats.update(next(result))
+                    obs = next(result)
+                    exp_stats = exp[(exp['index'] == obs['index']) &
+                                    (exp['column'] == obs['column'])]['stats'].values[0]
+                    eq_(obs['stats'], exp_stats, 'Test Mismatch with URI: %s ' % msg)
                 except StopIteration:
                     break
-            result = [stats[k]['stats'] for k in sorted(stats)]
-            aaq_(pd.DataFrame(result),
-                 pd.DataFrame(expected),
-                 4,
-                 'Mismatch with URI: %s ' % msg)
         else:
-            eq_([], expected, 'Mismatch with URI: %s ' % msg)
+            eq_([], exp, 'Mismatch with URI: %s ' % msg)
 
     def test_stats(self):
         for dataset in config['datasets']:
             for uri in dataset['uris']:
                 data = Data(uri)
                 groups = dataset['types']['groups']
-                result = al.crosstabs(data, groups)
-                self.check_stats(result, dataset['crosstabs'], uri)
+                result = al.crosstabs(data, groups, details=False)
+                expected = pd.DataFrame(dataset['crosstabs'])
+                self.check_stats(result, expected, uri)
             print('for %s on %s' % (dataset['table'], getengine(dataset['uris'])))
