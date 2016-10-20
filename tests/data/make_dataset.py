@@ -37,7 +37,11 @@ if __name__ == '__main__':
     elif ext in {'.h5', '.hdf5'}:
         store = pd.HDFStore(outfile)
         for key, df in datasets:
-            store.put(key, df, format='fixed', encoding='utf-8')
+            # Create all x.* as fixed tables, and rest as regular tables
+            fmt = 'fixed' if 'x' in outfile else 'table'
+            # Convert one column in to categorical -- to check different types
+            df[df.columns[0]] = df[df.columns[0]].astype('category')
+            store.put(key, df, format=fmt, encoding='utf-8')
 
     elif ext in {'.dta'}:
         # Files are overwritten. The last file written will survive

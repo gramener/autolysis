@@ -168,7 +168,9 @@ def metadata_file(path, root, tables=None):
     elif format in {'hdf5', 'xls', 'xlsx'}:
         if format == 'hdf5':
             store = pd.HDFStore(path)
-            table_list = store.keys()
+            # Pandas categorical data creates a /meta/values_block_<n>/meta table
+            # Ignore these?
+            table_list = [key for key in store.keys() if 'values_block_' not in key]
             store.close()
         else:
             xls = pd.ExcelFile(path)
@@ -199,7 +201,7 @@ def metadata_frame(data, top=3, preview=10, **kwargs):
         meta.nunique = series.nunique()
         # TODO: Preserve order for these transformations
         meta.top = series.value_counts().head(top)
-        if pd.np.issubdtype(series.dtype, int) or pd.np.issubdtype(series.dtype, float):
+        if series.dtype.kind in {'i', 'f'}:
             meta.moments = series.dropna().describe()
         columns[meta.name] = meta
     preview = min(preview, len(data))
