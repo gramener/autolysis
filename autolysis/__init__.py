@@ -323,7 +323,7 @@ def _crosstab(index, column, values=None, correction=False):
 def crosstabs(data, columns=None, values=None,
               correction=False,
               pairs_top=10000,
-              details=False):
+              details=True):
     '''
     Identifies the strength of relationship between every pair of categorical
     columns in a DataFrame
@@ -375,17 +375,17 @@ def crosstabs(data, columns=None, values=None,
                           correction=correction)
             if details:
                 result = {
-                    (index, column): {
-                        'observed': r['observed'],
-                        'expected': r['expected'],
+                        'index': index,
+                        'column': column,
+                        'observed': r['observed'].to_json(),
+                        'expected': r['expected'].to_json(),
                         'stats': {param: r[param] for param in parameters}
-                    }
                 }
             else:
                 result = {
-                    (index, column): {
+                        'index': index,
+                        'column': column,
                         'stats': {param: r[param] for param in parameters}
-                    }
                 }
 
         yield result
