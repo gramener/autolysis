@@ -14,13 +14,14 @@ import json
 import time
 import shutil
 import logging
+import openpyxl
 import requests
 import subprocess
 import pandas as pd
 import sqlalchemy as sa
 from copy import copy
 from hashlib import md5
-from six import text_type
+from six import text_type, string_types
 from functools import wraps
 from itertools import islice, chain
 from orderedattrdict import AttrDict
@@ -44,6 +45,7 @@ else:
 OK = 200                    # HTTP status code
 seconds_per_day = 86400     # Number of seconds in a day
 expiry_days = 1             # Number of days after which URLs expiry
+_excel_template = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'metadata-template.xlsx')
 
 
 def metadata(source, tables=None, root=None, merge=True, **kwargs):
@@ -501,8 +503,42 @@ class Meta(MetaDict):
         if cmd[0] in _read_command:
             return _read_command[cmd[0]](*cmd[1:])
 
-    def to_excel(self):
-        pass
+    @staticmethod
+    def _expression(expression, meta):
+        # Find the value of the Python expression in the cell.
+        # If the expression contains a [*] we treat it as a list enumeration.
+        expression = expression.strip().lstrip('#').strip()
+        try:
+            if '[*]' not in expression:
+                # ['x'][0]['z'] => meta['x'][0]['z']
+                return eval('meta' + expression)
+            else:
+                # ['columns'][*]['name'] => [meta['columns'][i]['name']]
+                prefix, postfix = expression.split('[*]', 2)
+                return [eval('item' + postfix) for item in eval('meta' + prefix + '.values()')]
+        except Exception as e:
+            logging.exception('Error in expression %s', expression)
+            return None
+
+    def to_excel(self, target_file, template=None):
+        # Loop through the excel sheet and find every cell that begins with //
+        # mapping[sheetname, row, column] has the contents of the cell
+        meta = self.to_dict()
+        book = openpyxl.load_workbook(template or _excel_template)
+        for sheetname in book.sheetnames:
+            sheet = book.get_sheet_by_name(sheetname)
+            for i, row in enumerate(sheet.rows):
+                for j, cell in enumerate(row):
+                    if isinstance(cell.value, string_types) and cell.value.startswith('#'):
+                        value = self._expression(cell.value, meta)
+                        # If the expression returns a list, write values one below another
+                        if isinstance(value, list):
+                            for index in range(len(value)):
+                                sheet.cell(row=i + 1 + index, column=j + 1).value = value[index]
+                        # If expression returns a single value, use it as is
+                        elif value is not None:
+                            cell.value = value
+        book.save(target_file)
 
     def to_powerpoint(self):
         pass
