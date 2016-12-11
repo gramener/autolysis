@@ -426,7 +426,6 @@ class MetaDict(AttrDict):
             if key in drop:
                 meta.pop(key)
         # Set default JSON export properties and export as JSON
-        import json
         kwargs.setdefault('cls', PandasEncoder)
         kwargs.setdefault('indent', 4)
         return json.dumps(meta, **kwargs)
@@ -474,6 +473,16 @@ _templates = {
 }
 
 
+def simplify(value, **kwargs):
+    '''
+    Convert arbitrary values into a string suitable for Excel
+    '''
+    if isinstance(value, string_types + (int, float)):
+        return value
+    kwargs.setdefault('cls', PandasEncoder)
+    return json.dumps(value, **kwargs)
+
+
 class Meta(MetaDict):
     def __str__(self, rows=100, deep=False, template=None):
         tmpl = _templates.get(template, _templates['text'])
@@ -515,7 +524,14 @@ class Meta(MetaDict):
             else:
                 # ['columns'][*]['name'] => [meta['columns'][i]['name']]
                 prefix, postfix = expression.split('[*]', 2)
-                return [eval('item' + postfix) for item in eval('meta' + prefix + '.values()')]
+                result = []
+                for item in eval('meta' + prefix + '.values()'):
+                    try:
+                        val = eval('item' + postfix)
+                    except Exception as e:
+                        val = ''
+                    result.append(val)
+                return result
         except Exception as e:
             logging.exception('Error in expression %s', expression)
             return None
@@ -523,21 +539,24 @@ class Meta(MetaDict):
     def to_excel(self, target_file, template=None):
         # Loop through the excel sheet and find every cell that begins with //
         # mapping[sheetname, row, column] has the contents of the cell
-        meta = self.to_dict()
         book = openpyxl.load_workbook(template or _excel_template)
         for sheetname in book.sheetnames:
             sheet = book.get_sheet_by_name(sheetname)
             for i, row in enumerate(sheet.rows):
                 for j, cell in enumerate(row):
                     if isinstance(cell.value, string_types) and cell.value.startswith('#'):
-                        value = self._expression(cell.value, meta)
+                        value = self._expression(cell.value, self)
                         # If the expression returns a list, write values one below another
                         if isinstance(value, list):
                             for index in range(len(value)):
-                                sheet.cell(row=i + 1 + index, column=j + 1).value = value[index]
+                                row, col = i + 1 + index, j + 1
+                                sheet.cell(row=row, column=col).value = simplify(value[index])
                         # If expression returns a single value, use it as is
                         elif value is not None:
-                            cell.value = value
+                            cell.value = simplify(value)
+                        # Clear invalid expression
+                        else:
+                            cell.value = ''
         book.save(target_file)
 
     def to_powerpoint(self):
@@ -613,12 +632,28 @@ class Column(MetaDict):
 
 
 class PandasEncoder(json.JSONEncoder):
+    '''
+    Convert Pandas Series and DataFrames into JSON via json.dumps
+    '''
+    date_format = '%Y-%m-%d %H:%M:%S'
+
     def default(self, obj):
         if isinstance(obj, pd.Series):
-            result = json.loads(obj.to_json(orient='split'))
+            result = obj.copy()
+            if result.dtype.name.startswith('datetime'):
+                result = result.dt.strftime(self.date_format)
+            if result.index.dtype.name.startswith('datetime'):
+                result.index = result.index.strftime(self.date_format)
+            result = json.loads(result.to_json(orient='split'))
             return AttrDict(zip(result['index'], result['data']))
         elif isinstance(obj, pd.DataFrame):
-            return json.loads(obj.to_json(orient='split'))
+            result = obj.copy()
+            if result.index.dtype.name.startswith('datetime'):
+                result.index = result.index.strftime(self.date_format)
+            for col in result.columns:
+                if result[col].dtype.name.startswith('datetime'):
+                    result[col] = result[col].dt.strftime(self.date_format)
+            return json.loads(result.to_json(orient='split'))
         return json.JSONEncoder.default(self, obj)
 
 
