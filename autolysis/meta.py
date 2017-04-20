@@ -1,9 +1,9 @@
 '''
 Generates standardised metadata for tabular datasets. Typical usage::
 
-    from autolysis import Metadata
-    info = Metadata('tests/data/x.csv')
-    info = Metadata('file:///tests/data/x.csv')
+    from autolysis import metadata
+    info = metadata('tests/data/x.csv')
+    info = metadata('file:///tests/data/x.csv')
 '''
 from __future__ import unicode_literals
 
@@ -520,7 +520,10 @@ class Meta(MetaDict):
         try:
             if '[*]' not in expression:
                 # ['x'][0]['z'] => meta['x'][0]['z']
-                return eval('meta' + expression)
+                try:
+                    return eval('meta' + expression)
+                except Exception as e:
+                    return ''
             else:
                 # ['columns'][*]['name'] => [meta['columns'][i]['name']]
                 prefix, postfix = expression.split('[*]', 2)
@@ -673,7 +676,7 @@ def chunked(method, chunksize):
     return wrapped
 
 
-MAX_ROWS = 10000
+MAX_ROWS = 100000
 read_csv_encoded = read_encoded(pd.read_csv)
 read_stata_encoded = read_encoded(pd.read_stata)
 _preview_command = {
