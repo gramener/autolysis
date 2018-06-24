@@ -45,8 +45,7 @@ setup_python() {
 
     # Install requirements into autolysis environment
     source activate autolysis-$TRAVIS_PYTHON_VERSION
-    conda install --file requirements-conda.txt
-    pip install -r requirements.txt
+    pip install -e .
     pip install -r requirements-dev.txt
 }
 

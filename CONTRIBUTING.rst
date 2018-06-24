@@ -54,7 +54,6 @@ To manually set up the development environment, follow these steps.
    "installs" the autolysis folder in development mode. Changes to this folder
    are reflected in the environment::
 
-      pip install -r requirements.txt         # Base requirements
       pip install -r requirements-dev.txt     # Additional development requirements
       pip uninstall autolysis                 # Uninstall prior autolysis repo
       pip install -e .                        # Install this repo as autolysis

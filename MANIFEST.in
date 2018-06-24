@@ -1,7 +1,5 @@
 # Include requirement dependencies
-include requirements.txt
 include requirements-dev.txt
-include requirements-conda.txt
 
 # Include core docs
 include AUTHORS.rst
